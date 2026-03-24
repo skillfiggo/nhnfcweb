@@ -1,0 +1,22 @@
+{
+  "name": "newhope-naija-fc",
+  "version": "1.0.0",
+  "description": "Official Webapp for NewHope Naija FC",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "@fontsource/bebas-neue": "^5.2.7",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/oswald": "^5.2.8",
+    "@fontsource/pirata-one": "^5.2.8",
+    "@fontsource/staatliches": "^5.2.8",
+    "@supabase/supabase-js": "^2.99.3"
+  }
+}

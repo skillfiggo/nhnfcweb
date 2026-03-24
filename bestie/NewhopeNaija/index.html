@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NewHope Naija FC | Official Website</title>
+  <meta name="description" content="Welcome to the official website of NewHope Naija FC — Nigerian youth football development. Latest news, match results, player profiles and highlights." />
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+
+</head>
+<body>
+
+<!-- Preloader -->
+<div id="preloader">
+  <div class="preloader-inner">
+    <img src="/images/logo.png" alt="Logo" class="preloader-logo" />
+    <div class="preloader-bar"><div class="preloader-bar-fill"></div></div>
+  </div>
+</div>
+
+<!-- Nav Overlay -->
+<div class="nav-overlay" id="navOverlay"></div>
+
+<!-- Mega Menu Nav -->
+<nav class="mobile-nav mega-menu-box" id="mobileNav">
+  <div class="mega-menu-inner">
+    <!-- Left Column: Links -->
+    <div class="mega-col-left">
+      <button class="mega-close-btn" id="navClose">
+        <span class="mega-close-icon">✕</span> <span data-i18n="navClose">CLOSE</span>
+      </button>
+      <div class="mega-nav-links">
+        <a href="#home" class="mega-link active-link" data-panel="panel-home"><span class="mega-icon">🏠</span> <span data-i18n="navHome">HOME</span></a>
+        <a href="#news" class="mega-link" data-panel="panel-news"><span class="mega-icon">📰</span> <span data-i18n="navNews">NEWS</span></a>
+        <a href="#matches-page" class="mega-link" data-panel="panel-competitions"><span class="mega-icon">📋</span> <span data-i18n="navCompetitions">COMPETITIONS</span></a>
+        <a href="#players" class="mega-link" data-panel="panel-players"><span class="mega-icon">👥</span> <span data-i18n="navPlayers">PLAYERS</span></a>
+        <a href="#about" class="mega-link" data-panel="panel-home"><span class="mega-icon">⚽</span> <span data-i18n="navAbout">ABOUT</span></a>
+      </div>
+    </div>
+
+    <!-- Middle Column: Dynamic Panels -->
+    <div class="mega-col-middle">
+
+      <!-- Panel: Home (default) -->
+      <div class="mega-panel active" id="panel-home">
+        <a href="#home" id="megaHomeLink">
+          <div class="mega-image-feature">
+            <img src="/images/hero-slide-1.jpg" alt="Homepage Feature" class="mega-feature-img" />
+            <div class="mega-feature-overlay" data-i18n="navHomepage">HOMEPAGE</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Panel: News -->
+      <div class="mega-panel" id="panel-news">
+        <a href="#news" class="mega-panel-col">
+          <img src="/images/hero-slide-2.jpg" alt="Blog" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navBlog">BLOG</div>
+        </a>
+        <a href="#news" class="mega-panel-col">
+          <img src="/images/hero-slide-3.jpg" alt="NewHope TV" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navTV">NEWHOPE TV</div>
+        </a>
+      </div>
+
+      <!-- Panel: Competitions -->
+      <div class="mega-panel" id="panel-competitions">
+        <a href="#matches-page" class="mega-panel-col">
+          <img src="/images/hero-slide-1.jpg" alt="Friendly" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navFriendly">FRIENDLY</div>
+        </a>
+        <a href="#matches-page" class="mega-panel-col">
+          <img src="/images/hero-slide-2.jpg" alt="NLO" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navNLO">NLO</div>
+        </a>
+      </div>
+
+      <!-- Panel: Players -->
+      <div class="mega-panel" id="panel-players">
+        <a href="#players" class="mega-panel-col">
+          <img src="/images/hero-slide-3.jpg" alt="Under-19" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navU19">UNDER-19</div>
+        </a>
+        <a href="#players" class="mega-panel-col">
+          <img src="/images/hero-slide-1.jpg" alt="Under-17" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navU17">UNDER-17</div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Branding -->
+    <div class="mega-col-right">
+      <img src="/images/logo.png" alt="NewHope Naija FC Logo" class="mega-brand-logo" />
+      <p class="mega-brand-desc" data-i18n="navDesc">
+        Welcome to the official website of NewHope Naija FC. Stay up to date with the latest news, match highlights, player features, and exclusive behind-the-scenes content.
+      </p>
+      <div class="mega-social-icons">
+        <a href="#">✕</a>
+        <a href="#">📷</a>
+        <a href="#">🎵</a>
+        <a href="#">▶</a>
+      </div>
+      <div class="mega-footer-text" data-i18n="navFooterText">NewHope Naija FC ©2026<br>All rights reserved</div>
+    </div>
+  </div>
+</nav>
+<!-- Top Utility Bar -->
+<div id="topbar" style="position:absolute; top:0; left:0; right:0; z-index:1001; border-bottom:1px solid rgba(255,255,255,0.05); padding:12px 0;">
+  <div class="container" style="display:flex; justify-content:flex-end; align-items:center; gap:24px;">
+    <a href="#login" class="nav-login-btn" style="color:var(--light-gray); font-weight:600; font-size:0.75rem; text-decoration:none; display:flex; align-items:center; gap:6px; letter-spacing:1px; text-transform:uppercase; transition:color 0.2s;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+      </svg>
+      <span data-i18n="topLogin">Login</span>
+    </a>
+    <select id="langToggle" style="background:var(--white); border:1px solid var(--white); border-radius:4px; padding:4px 8px; color:var(--dark); cursor:pointer; font-weight:700; font-size:0.75rem; outline:none; text-transform:uppercase; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+      <option value="en" style="color:#000;">English</option>
+      <option value="zh" style="color:#000;">Chinese</option>
+    </select>
+  </div>
+</div>
+
+<!-- Search Modal -->
+<div class="search-modal" id="searchModal">
+  <button class="search-close-btn" id="searchCloseBtn" aria-label="Close Search">✕</button>
+  <div class="search-modal-inner container">
+    <div class="search-input-wrap">
+      <svg class="search-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <input type="text" id="searchInput" class="search-input-field" placeholder="Search news, players, matches..." autocomplete="off" />
+    </div>
+    <div class="search-results-area" id="searchResultsArea">
+      <div class="search-suggestions" id="searchSuggestions">
+        <h4 data-i18n="quickLinks">Quick Links</h4>
+        <div class="suggestion-tags">
+          <a href="#news" class="tag tag-outline search-link">Transfer News</a>
+          <a href="#players" class="tag tag-outline search-link">Academy Players</a>
+          <a href="#matches-page" class="tag tag-outline search-link">Fixtures</a>
+          <a href="#gallery" class="tag tag-outline search-link">Match Photos</a>
+        </div>
+      </div>
+      <div class="search-results-list" id="searchResultsList" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Navbar -->
+<header id="navbar">
+  <div class="container nav-inner" style="position: relative;">
+    <!-- Left: Hamburger Menu -->
+    <button class="hamburger nav-burger-btn" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Center: Logo -->
+    <a href="#home" class="nav-brand nav-brand-centered">
+      <img src="/images/logo.png" alt="NewHope Naija FC" class="nav-logo" />
+    </a>
+
+    <!-- Right: Search -->
+    <div style="display:flex; align-items:center; z-index:100;">
+      <button class="search-btn" id="searchBtn" aria-label="Search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- SPA Root -->
+<main id="app"></main>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
