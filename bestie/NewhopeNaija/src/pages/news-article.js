@@ -44,13 +44,13 @@ export function init() {
       : `<div style="width:100%; height:80px; background:linear-gradient(135deg,var(--navy-dark),var(--red-dark)); border-radius:8px; margin-bottom:24px;"></div>`;
 
     container.innerHTML = `
-      <article class="single-article" style="max-width: 800px; margin: 0 auto;">
+      <article class="single-article" style="max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px 30px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08);">
         <header style="margin-bottom: 24px; text-align: center;">
           <h1 style="font-size: 2.8rem; color: var(--navy-dark); margin-bottom: 12px; font-family: 'Oswald', sans-serif; line-height: 1.2;">${data.title}</h1>
           <div class="news-date" style="color: var(--gray); font-weight: 500; font-size: 1.1rem;">Published on ${new Date(data.created_at).toLocaleDateString()}</div>
         </header>
         ${imgHTML}
-        <div class="article-body" style="font-size: 1.15rem; line-height: 1.8; color: #444; white-space: pre-wrap; font-family: 'Inter', sans-serif;">
+        <div class="article-body" style="font-size: 1.15rem; line-height: 1.8; color: #222; white-space: pre-wrap; font-family: 'Inter', sans-serif;">
           ${data.body}
         </div>
         <div style="margin-top: 60px; text-align: center; border-top: 1px solid #eee; padding-top: 30px;">
