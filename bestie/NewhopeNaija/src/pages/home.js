@@ -226,10 +226,7 @@ export function render() {
     </div>
 
     <div class="players-grid" id="playersGrid">
-      <div class="player-card" data-pos="gk"><div class="player-card-img"><div class="player-number">1</div><div class="player-silhouette">🧤</div><span class="player-pos-badge">GK</span></div><div class="player-card-body"><div class="player-name">IBRAHIM <span class="last">MUSA</span></div><div class="player-meta"><span>No. 1</span><span>Nigeria</span></div></div></div>
-      <div class="player-card" data-pos="def"><div class="player-card-img"><div class="player-number">4</div><div class="player-silhouette">🛡️</div><span class="player-pos-badge">DEF</span></div><div class="player-card-body"><div class="player-name">TAIWO <span class="last">ADEYEMI</span></div><div class="player-meta"><span>No. 4</span><span>Nigeria</span></div></div></div>
-      <div class="player-card" data-pos="def"><div class="player-card-img"><div class="player-number">5</div><div class="player-silhouette">🛡️</div><span class="player-pos-badge">DEF</span></div><div class="player-card-body"><div class="player-name">CHUKWUMA <span class="last">EZE</span></div><div class="player-meta"><span>No. 5</span><span>Nigeria</span></div></div></div>
-      <div class="player-card" data-pos="mid"><div class="player-card-img"><div class="player-number">8</div><div class="player-silhouette">⚙️</div><span class="player-pos-badge">MID</span></div><div class="player-card-body"><div class="player-name">EMEKA <span class="last">OKAFOR</span></div><div class="player-meta"><span>No. 8</span><span>Nigeria</span></div></div></div>
+      <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading players...</div>
     </div>
     <div style="text-align:center;margin-top:32px;"><a href="#players" class="btn btn-primary">${t('btnSeePlayers')}</a></div>
   </div>
@@ -385,6 +382,47 @@ export function init() {
   });
 
 
+  // Fetch latest players
+  if (supabase) {
+    supabase.from('profiles').select('*').eq('role', 'player').order('created_at', { ascending: false }).limit(4).then(({ data, error }) => {
+      const grid = document.getElementById('playersGrid');
+      if (!grid) return;
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No players added yet.</p>';
+        return;
+      }
+      grid.innerHTML = data.map(p => {
+        let posBadge = 'PLY';
+        let sil = '🏃‍♂️';
+        if (p.position === 'Goalkeeper') { posBadge = 'GK'; sil = '🧤'; }
+        else if (p.position === 'Defender') { posGroup = 'def'; sil = '🛡️'; }
+        else if (p.position === 'Midfielder') { posBadge = 'MID'; sil = '⚙️'; }
+        else if (p.position === 'Forward') { posBadge = 'FWD'; sil = '⚡'; }
+
+        const imgHTML = p.avatar_url 
+          ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px;z-index:0;">`
+          : `<div class="player-silhouette">${sil}</div>`;
+
+        const names = (p.full_name || 'Unknown Player').split(' ');
+        const firstName = names[0];
+        const lastName = names.slice(1).join(' ');
+
+        return `
+          <div class="player-card">
+            <div class="player-card-img" style="position:relative;">
+              ${imgHTML}
+              <div class="player-number" style="z-index:2;">${p.shirt_number || '-'}</div>
+              <span class="player-pos-badge" style="z-index:2;">${posBadge}</span>
+            </div>
+            <div class="player-card-body">
+              <div class="player-name">${firstName} <span class="last">${lastName}</span></div>
+              <div class="player-meta"><span>No. ${p.shirt_number || '-'}</span><span>${p.nationality || 'Nigeria'}</span></div>
+            </div>
+          </div>`;
+      }).join('');
+    });
+  }
+  
   // Fetch latest news
   if (supabase) {
     supabase.from('news').select('*').eq('published', true).order('created_at', { ascending: false }).limit(4).then(({ data, error }) => {
