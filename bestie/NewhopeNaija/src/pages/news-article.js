@@ -54,7 +54,7 @@ export function init() {
           ${data.body}
         </div>
         <div style="margin-top: 60px; text-align: center; border-top: 1px solid #eee; padding-top: 30px;">
-          <a href="#news" class="btn btn-outline">← Return to News</a>
+          <a href="#news" class="btn" style="background-color: #cc0000; border-color: #cc0000; color: white;">← Return to News</a>
         </div>
       </article>
     `;
