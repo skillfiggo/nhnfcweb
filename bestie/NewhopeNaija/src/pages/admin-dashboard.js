@@ -467,12 +467,33 @@ async function savePlayer(e) {
       // Update existing player
       const { error: pErr } = await supabase.from('profiles').update(profileData).eq('id', id);
       if (pErr) throw pErr;
-      const { error: sErr } = await supabase.from('player_stats').update(statsData).eq('player_id', id);
-      if (sErr) throw sErr;
+      
+      const { data: existingStat } = await supabase.from('player_stats').select('id').eq('player_id', id).single();
+      if (existingStat) {
+        await supabase.from('player_stats').update(statsData).eq('player_id', id);
+      } else {
+        await supabase.from('player_stats').insert({ player_id: id, ...statsData });
+      }
       showToast('Player updated successfully!');
     } else {
-      // New player - create profile entry (no auth account yet, just a profile stub)
-      showToast('To add a new player, use Manage Users to invite them. Then edit their profile here.', 'info');
+      // Invite new player via Edge Function
+      if (!profileData.email) throw new Error("An email address is required to invite a new player.");
+      showToast('Inviting player securely...', 'info');
+      
+      const { data: invokeData, error: invokeError } = await supabase.functions.invoke('invite-user', {
+        body: { email: profileData.email }
+      });
+      
+      if (invokeError) throw new Error(invokeError.message || "Failed to run edge function.");
+      if (invokeData?.error) throw new Error(invokeData.error);
+      
+      const newUserId = invokeData.user.id;
+      
+      // The trigger created an empty profile. Now update it.
+      await supabase.from('profiles').update(profileData).eq('id', newUserId);
+      await supabase.from('player_stats').insert({ player_id: newUserId, ...statsData });
+      
+      showToast('Player invited and profile beautifully setup!');
     }
     closeModal('playerModal');
     renderPlayersPanel();
