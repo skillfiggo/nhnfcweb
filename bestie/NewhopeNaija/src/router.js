@@ -12,7 +12,8 @@ export function navigate(hash) {
 }
 
 function getHash() {
-  return window.location.hash.replace('#', '') || 'home';
+  const hashString = window.location.hash.replace('#', '') || 'home';
+  return hashString.split('?')[0];
 }
 
 export async function render() {

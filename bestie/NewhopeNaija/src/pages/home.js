@@ -401,7 +401,7 @@ export function init() {
             <span class="news-cat-badge">Club News</span>
           </div>
           <div class="news-body"><div class="news-date">📅 ${new Date(n.created_at).toLocaleDateString()}</div><h3 class="news-title">${n.title}</h3><p class="news-excerpt">${n.body.substring(0, 100)}...</p></div>
-          <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
+          <div class="news-footer"><a href="#news-article?id=${n.id}" class="news-read-more">Read More →</a></div>
         </article>
       `).join('');
     });

@@ -14,6 +14,7 @@ import './style.css';
 import { register, initRouter, render } from './router.js';
 import * as home from './pages/home.js';
 import * as news from './pages/news.js';
+import * as newsArticle from './pages/news-article.js';
 import * as players from './pages/players.js';
 import * as matches from './pages/matches.js';
 import * as gallery from './pages/gallery.js';
@@ -33,6 +34,7 @@ function updateStaticTranslations() {
 // ===== Register Routes =====
 register('home', home);
 register('news', news);
+register('news-article', newsArticle);
 register('players', players);
 register('matches-page', matches);
 register('gallery', gallery);
