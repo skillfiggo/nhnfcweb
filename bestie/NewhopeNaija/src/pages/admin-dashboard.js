@@ -86,6 +86,12 @@ export function render() {
               <input type="text" id="pFullName" class="form-input" required />
             </div>
             <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="pEmail" class="form-input" placeholder="player@example.com" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label>Position</label>
               <select id="pPosition" class="form-input">
                 <option value="">Select position</option>
@@ -93,15 +99,53 @@ export function render() {
                 <option>Midfielder</option><option>Forward</option>
               </select>
             </div>
+            <div class="form-group">
+              <label>Jersey Number</label>
+              <input type="number" id="pShirtNumber" class="form-input" min="1" max="99" />
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Shirt Number</label>
-              <input type="number" id="pShirtNumber" class="form-input" min="1" max="99" />
-            </div>
-            <div class="form-group">
               <label>Nationality</label>
               <input type="text" id="pNationality" class="form-input" placeholder="e.g. Nigerian" />
+            </div>
+            <div class="form-group">
+              <label>NIN Number</label>
+              <input type="text" id="pNIN" class="form-input" placeholder="National ID" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Height (cm)</label>
+              <input type="number" id="pHeight" class="form-input" placeholder="e.g. 180" />
+            </div>
+            <div class="form-group">
+              <label>Weight (kg)</label>
+              <input type="number" id="pWeight" class="form-input" placeholder="e.g. 75" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Current License No.</label>
+              <input type="text" id="pCurrentLicense" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Previous License No. (Optional)</label>
+              <input type="text" id="pPreviousLicense" class="form-input" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Previous Club (Optional)</label>
+            <input type="text" id="pPreviousClub" class="form-input" placeholder="Name of previous club" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Upload Passport (Live Camera)</label>
+              <input type="file" id="pPassportPhoto" class="form-input" accept="image/*" capture="user" />
+            </div>
+            <div class="form-group">
+              <label>Upload Photo</label>
+              <input type="file" id="pProfilePhoto" class="form-input" accept="image/*" />
             </div>
           </div>
           <div class="form-row">
@@ -345,11 +389,20 @@ async function loadPlayerForEdit(playerId) {
   document.getElementById('playerModalTitle').textContent = 'Edit Player';
   document.getElementById('playerFormId').value = playerId;
   document.getElementById('pFullName').value = p?.full_name || '';
+  document.getElementById('pEmail').value = p?.email || '';
   document.getElementById('pPosition').value = p?.position || '';
   document.getElementById('pShirtNumber').value = p?.shirt_number || '';
   document.getElementById('pNationality').value = p?.nationality || '';
+  document.getElementById('pNIN').value = p?.nin_number || '';
+  document.getElementById('pHeight').value = p?.height_cm || '';
+  document.getElementById('pWeight').value = p?.weight_kg || '';
+  document.getElementById('pCurrentLicense').value = p?.current_license_no || '';
+  document.getElementById('pPreviousLicense').value = p?.previous_license_no || '';
+  document.getElementById('pPreviousClub').value = p?.previous_club || '';
   document.getElementById('pDob').value = p?.date_of_birth || '';
   document.getElementById('pBio').value = p?.bio || '';
+  document.getElementById('pPassportPhoto').value = '';
+  document.getElementById('pProfilePhoto').value = '';
   document.getElementById('pHealth').value = stats?.health_status || 'fit';
   document.getElementById('pSalary').value = stats?.salary_amount || '';
   openModal('playerModal');
@@ -366,12 +419,44 @@ async function savePlayer(e) {
   const id = document.getElementById('playerFormId').value;
   const profileData = {
     full_name: document.getElementById('pFullName').value,
+    email: document.getElementById('pEmail').value,
     position: document.getElementById('pPosition').value,
     shirt_number: parseInt(document.getElementById('pShirtNumber').value) || null,
     nationality: document.getElementById('pNationality').value,
+    nin_number: document.getElementById('pNIN').value,
+    height_cm: parseFloat(document.getElementById('pHeight').value) || null,
+    weight_kg: parseFloat(document.getElementById('pWeight').value) || null,
+    current_license_no: document.getElementById('pCurrentLicense').value,
+    previous_license_no: document.getElementById('pPreviousLicense').value,
+    previous_club: document.getElementById('pPreviousClub').value,
     date_of_birth: document.getElementById('pDob').value || null,
     bio: document.getElementById('pBio').value,
   };
+
+  // Handle File Uploads (Optional, ignores errors if bucket doesn't exist yet)
+  try {
+    const passportFile = document.getElementById('pPassportPhoto').files[0];
+    if (passportFile) {
+      const pName = `passports/${Date.now()}_${passportFile.name}`;
+      const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, passportFile);
+      if (!err && uploadData) {
+        const { data: pubData } = supabase.storage.from('players').getPublicUrl(uploadData.path);
+        profileData.passport_photo_url = pubData.publicUrl;
+      }
+    }
+
+    const photoFile = document.getElementById('pProfilePhoto').files[0];
+    if (photoFile) {
+      const pName = `photos/${Date.now()}_${photoFile.name}`;
+      const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, photoFile);
+      if (!err && uploadData) {
+        const { data: pubData } = supabase.storage.from('players').getPublicUrl(uploadData.path);
+        profileData.avatar_url = pubData.publicUrl;
+      }
+    }
+  } catch (e) { 
+    console.warn('Storage uploads failed (Bucket might not exist yet)', e);
+  }
   const statsData = {
     health_status: document.getElementById('pHealth').value,
     salary_amount: parseFloat(document.getElementById('pSalary').value) || null,
