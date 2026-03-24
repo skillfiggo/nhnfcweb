@@ -395,7 +395,7 @@ export function init() {
         let posBadge = 'PLY';
         let sil = '🏃‍♂️';
         if (p.position === 'Goalkeeper') { posBadge = 'GK'; sil = '🧤'; }
-        else if (p.position === 'Defender') { posGroup = 'def'; sil = '🛡️'; }
+        else if (p.position === 'Defender') { posBadge = 'DEF'; sil = '🛡️'; }
         else if (p.position === 'Midfielder') { posBadge = 'MID'; sil = '⚙️'; }
         else if (p.position === 'Forward') { posBadge = 'FWD'; sil = '⚡'; }
 
