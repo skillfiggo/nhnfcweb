@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { supabase } from '../lib/supabase.js';
 
 export const title = 'Home';
 
@@ -209,27 +210,8 @@ export function render() {
       <h2 class="section-title"><span>${t('latestNews')}</span> ${t('newsSpan')}</h2>
       <p class="section-subtitle">${t('newsSub')}</p>
     </div>
-    <div class="news-grid">
-      <article class="news-card">
-        <div class="news-img"><div class="news-img-placeholder" style="background:linear-gradient(135deg,#cc000033,#001f5b33);">🌍</div><span class="news-cat-badge">Transfer News</span></div>
-        <div class="news-body"><div class="news-date">📅 Mar 15, 2026</div><h3 class="news-title">Emeka Okafor Signs for Belgian Top-Flight Club</h3><p class="news-excerpt">NewHope Naija FC's midfield maestro Emeka Okafor has completed a move to Belgian Pro League side, marking a massive milestone for the academy.</p></div>
-        <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
-      </article>
-      <article class="news-card">
-        <div class="news-img"><div class="news-img-placeholder" style="background:linear-gradient(135deg,#001f5b33,#cc000033);">🦅</div><span class="news-cat-badge">National Team</span></div>
-        <div class="news-body"><div class="news-date">📅 Mar 8, 2026</div><h3 class="news-title">Chidi Nwosu Earns Super Eagles U-20 Call-Up</h3><p class="news-excerpt">Academy striker Chidi Nwosu has been named in the Super Eagles U-20 squad for the upcoming WAFU Zone B Championship qualifiers.</p></div>
-        <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
-      </article>
-      <article class="news-card">
-        <div class="news-img"><div class="news-img-placeholder" style="background:linear-gradient(135deg,#cc000022,#001f5b44);">🏆</div><span class="news-cat-badge">League Update</span></div>
-        <div class="news-body"><div class="news-date">📅 Feb 28, 2026</div><h3 class="news-title">NewHope Naija FC Top Lagos Youth League Table</h3><p class="news-excerpt">After a dominant run of six consecutive wins, NewHope Naija FC sits at the top of the Lagos Youth League standings.</p></div>
-        <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
-      </article>
-      <article class="news-card">
-        <div class="news-img"><div class="news-img-placeholder" style="background:linear-gradient(135deg,#001f5b22,#cc000044);">⚽</div><span class="news-cat-badge">Academy</span></div>
-        <div class="news-body"><div class="news-date">📅 Feb 10, 2026</div><h3 class="news-title">New Season Trials: 2026/2027 Intake Now Open</h3><p class="news-excerpt">NewHope Naija FC is opening trials for the 2026/2027 season. Young players aged 12–19 across Nigeria are invited to showcase their talent.</p></div>
-        <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
-      </article>
+    <div class="news-grid" id="homeNewsGrid">
+      <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading latest news...</div>
     </div>
     <div style="text-align:center;margin-top:32px;"><a href="#news" class="btn btn-navy">${t('btnViewNews')}</a></div>
   </div>
@@ -402,6 +384,28 @@ export function init() {
     }, 40);
   });
 
+
+  // Fetch latest news
+  if (supabase) {
+    supabase.from('news').select('*').eq('published', true).order('created_at', { ascending: false }).limit(4).then(({ data, error }) => {
+      const grid = document.getElementById('homeNewsGrid');
+      if (!grid) return;
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No news available at the moment.</p>';
+        return;
+      }
+      grid.innerHTML = data.map(n => `
+        <article class="news-card">
+          <div class="news-img">
+            ${n.image_url ? `<img src="${n.image_url}" alt="news image" style="width:100%;height:100%;object-fit:cover;">` : `<div class="news-img-placeholder" style="background:linear-gradient(135deg,#cc000033,#001f5b33);">📰</div>`}
+            <span class="news-cat-badge">Club News</span>
+          </div>
+          <div class="news-body"><div class="news-date">📅 ${new Date(n.created_at).toLocaleDateString()}</div><h3 class="news-title">${n.title}</h3><p class="news-excerpt">${n.body.substring(0, 100)}...</p></div>
+          <div class="news-footer"><a href="#news" class="news-read-more">Read More →</a></div>
+        </article>
+      `).join('');
+    });
+  }
 
 }
 
