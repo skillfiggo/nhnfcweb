@@ -1,31 +1,76 @@
 import { supabase } from '../lib/supabase.js';
 
-export const title = 'Set Your Password';
-
 export function render() {
   return `
-    <section class="auth-section">
-      <div class="auth-container reveal">
-        <h2 class="auth-title">Welcome to the Team!</h2>
-        <p class="auth-subtitle">Please set a secure password for your account to continue.</p>
-        <form id="setupPasswordForm" class="auth-form">
-          <div class="form-group">
-            <label>New Password</label>
-            <input type="password" id="newPassword" class="form-input" required minlength="6" />
-          </div>
-          <div class="form-group">
-            <label>Confirm Password</label>
-            <input type="password" id="confirmPassword" class="form-input" required minlength="6" />
-          </div>
-          <div id="setupError" class="auth-error" style="display: none;"></div>
-          <button type="submit" class="auth-submit btn btn-primary w-100" id="setupSubmitBtn">Set Password</button>
-        </form>
+    <div class="login-page-wrap">
+      <div class="login-left">
+        <div class="login-slide active" style="background-image: url('/images/hero-slide-2.jpg');"></div>
+        <div class="login-overlay"></div>
+        <div class="login-left-content">
+          <img src="/images/logo.png" alt="Logo" class="login-brand-logo" />
+          <h2 class="login-welcome-title">Welcome to the <span>Academy</span></h2>
+          <p class="login-welcome-desc">Join the next generation of football stars. Set your secure password to access your player profile and training schedule.</p>
+        </div>
       </div>
-    </section>
+      
+      <div class="login-right">
+        <div class="login-form-container">
+          <div class="login-header">
+            <h2>Activate Your Account</h2>
+            <p>Set a secure password for your new profile</p>
+          </div>
+          
+          <form class="login-form" id="setupPasswordForm">
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="newPassword" class="form-input" placeholder="Min. 6 characters" required minlength="6" />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <div class="input-wrap">
+                <span class="input-icon">🛡️</span>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat password" required minlength="6" />
+              </div>
+            </div>
+            
+            <div id="setupError" class="auth-error" style="display: none; margin-bottom: 20px;"></div>
+            
+            <button type="submit" class="btn btn-primary login-submit-btn" id="setupSubmitBtn" style="width: 100%; justify-content: center;">
+              Complete Registration
+            </button>
+          </form>
+          
+          <div class="login-footer">
+            <p>Need help? <a href="#contact">Contact Support</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }
 
 export function init() {
+  // Hide global elements
+  const navbar = document.getElementById('navbar');
+  const footer = document.getElementById('footer');
+  const topbar = document.getElementById('topbar');
+  if (navbar) navbar.style.display = 'none';
+  if (footer) footer.style.display = 'none';
+  if (topbar) topbar.style.display = 'none';
+
+  window.addEventListener('hashchange', function onHash() {
+    if (window.location.hash !== '#setup-password') {
+      if (navbar) navbar.style.display = '';
+      if (footer) footer.style.display = '';
+      if (topbar) topbar.style.display = '';
+      window.removeEventListener('hashchange', onHash);
+    }
+  });
+
   const form = document.getElementById('setupPasswordForm');
   const errorDiv = document.getElementById('setupError');
   const submitBtn = document.getElementById('setupSubmitBtn');
@@ -44,26 +89,19 @@ export function init() {
       }
 
       errorDiv.style.display = 'none';
-      errorDiv.textContent = "";
       submitBtn.textContent = 'Saving...';
       submitBtn.disabled = true;
 
-      const { data, error } = await supabase.auth.updateUser({
-        password: pwd
-      });
+      const { error } = await supabase.auth.updateUser({ password: pwd });
 
       if (error) {
         errorDiv.textContent = error.message;
         errorDiv.style.display = 'block';
-        submitBtn.textContent = 'Set Password';
+        submitBtn.textContent = 'Complete Registration';
         submitBtn.disabled = false;
       } else {
-        // Success
         submitBtn.textContent = 'Success! Redirecting...';
-        // Give the session a moment to be fully established and acknowledged, then route to the dashboard
-        setTimeout(() => {
-          window.location.hash = '#player-dashboard';
-        }, 1500);
+        setTimeout(() => { window.location.hash = '#player-dashboard'; }, 1500);
       }
     });
   }
