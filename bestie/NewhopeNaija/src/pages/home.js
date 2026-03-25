@@ -158,43 +158,8 @@ export function render() {
       <h2 class="section-title">${t('latestMatches')} <span>${t('matchesSpan')}</span></h2>
       <p class="section-subtitle">${t('matchesSub')}</p>
     </div>
-    <div class="matches-grid">
-      <div class="match-card">
-        <div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 17, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">SUNRISE FC</div><div class="match-team-tag">${t('matchHome')}</div></div>
-          <div class="match-score"><span class="match-score-num">1</span><span class="match-score-sep">–</span><span class="match-score-num">3</span></div>
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">${t('matchAway')}</div></div>
-        </div>
-        <div class="match-result"><span class="match-won">${t('matchWin')}</span></div>
-      </div>
-      <div class="match-card">
-        <div class="match-comp">🏆 NNL CUP <span class="match-date">Mar 14, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">${t('matchHome')}</div></div>
-          <div class="match-score"><span class="match-score-num">2</span><span class="match-score-sep">–</span><span class="match-score-num">0</span></div>
-          <div class="match-team"><div class="match-team-name">VICTORIA ISLAND FC</div><div class="match-team-tag">${t('matchAway')}</div></div>
-        </div>
-        <div class="match-result"><span class="match-won">${t('matchWin')}</span></div>
-      </div>
-      <div class="match-card">
-        <div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 10, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">FUTURE EAGLES FC</div><div class="match-team-tag">${t('matchHome')}</div></div>
-          <div class="match-score"><span class="match-score-num">1</span><span class="match-score-sep">–</span><span class="match-score-num">1</span></div>
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">${t('matchAway')}</div></div>
-        </div>
-        <div class="match-result"><span class="match-lost">${t('matchDraw')}</span></div>
-      </div>
-      <div class="match-card" style="border-left-color:#00c853;">
-        <div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 22, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">${t('matchHome')}</div></div>
-          <div class="match-score" style="background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);"><span class="match-score-num" style="font-size:1rem;color:var(--gray);">VS</span></div>
-          <div class="match-team"><div class="match-team-name">ABUJA UNITED FC</div><div class="match-team-tag">${t('matchAway')}</div></div>
-        </div>
-        <div class="match-result"><span class="match-upcoming"><span class="live-dot"></span> ${t('matchUpcoming')} · 4:00 PM</span></div>
-      </div>
+    <div class="matches-grid" id="homeMatchesGrid">
+      <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading latest matches...</div>
     </div>
     <div style="text-align:center;margin-top:32px;">
       <a href="#matches-page" class="btn btn-outline">${t('btnViewFixtures')}</a>
@@ -447,6 +412,48 @@ export function init() {
       }).join('');
     });
   }
+  // Fetch latest fixtures
+  if (supabase) {
+    supabase.from('fixtures').select('*').order('match_date', { ascending: false }).limit(4).then(({ data, error }) => {
+      const grid = document.getElementById('homeMatchesGrid');
+      if (!grid) return;
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No matches scheduled yet.</p>';
+        return;
+      }
+      grid.innerHTML = data.map(f => {
+        let resultLabel = '';
+        let scoreUI = `<span class="match-score-num">${f.home_score ?? 0}</span><span class="match-score-sep">–</span><span class="match-score-num">${f.away_score ?? 0}</span>`;
+        
+        if (f.status === 'scheduled') {
+          scoreUI = `<div class="match-score" style="background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);"><span class="match-score-num" style="font-size:1rem;color:var(--gray);">VS</span></div>`;
+          resultLabel = `<span class="match-upcoming"><span class="live-dot"></span> ${t('matchUpcoming')}</span>`;
+        } else if (f.status === 'live') {
+          resultLabel = `<span class="match-live"><span class="live-dot badge-pulse"></span> LIVE</span>`;
+        } else if (f.status === 'completed') {
+          const isHomeWin = (f.home_score > f.away_score);
+          const isDraw = (f.home_score === f.away_score);
+          if (isDraw) resultLabel = `<span class="match-lost">${t('matchDraw')}</span>`;
+          else resultLabel = `<span class="match-won">${t('matchWin')}</span>`;
+        }
+
+        const dateStr = new Date(f.match_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = new Date(f.match_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        return `
+          <div class="match-card" ${f.status === 'scheduled' ? 'style="border-left-color:#00c853;"' : ''}>
+            <div class="match-comp">🏆 ${f.competition || 'MATCH'} <span class="match-date">${dateStr}</span></div>
+            <div class="match-teams">
+              <div class="match-team"><div class="match-team-name">${f.home_team}</div><div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div></div>
+              ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
+              <div class="match-team"><div class="match-team-name">${f.away_team}</div><div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div></div>
+            </div>
+            <div class="match-result">${resultLabel} ${f.status === 'scheduled' ? ` · ${timeStr}` : ''}</div>
+          </div>`;
+      }).join('');
+    });
+  }
+
   // Fetch Ad Banner
   if (supabase) {
     supabase.from('site_settings').select('value').eq('key', 'home_ad_banner').single().then(({ data }) => {

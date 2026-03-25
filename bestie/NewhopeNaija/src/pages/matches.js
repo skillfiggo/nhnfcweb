@@ -1,3 +1,6 @@
+import { supabase } from '../lib/supabase.js';
+import { t } from '../i18n.js';
+
 export const title = 'Fixtures & Results';
 
 export function render() {
@@ -19,47 +22,13 @@ export function render() {
     </div>
 
     <h3 style="font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:2px;color:var(--red-light);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--glass-border);">📅 Upcoming Fixtures</h3>
-    <div class="matches-grid" style="margin-bottom:40px;">
-      <div class="match-card" style="border-left-color:#00c853;">
-        <div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 22, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(H)</div></div>
-          <div class="match-score" style="background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);"><span class="match-score-num" style="font-size:1rem;color:var(--gray);">VS</span></div>
-          <div class="match-team"><div class="match-team-name">ABUJA UNITED FC</div><div class="match-team-tag">(A)</div></div>
-        </div>
-        <div class="match-result"><span class="match-upcoming"><span class="live-dot"></span> Upcoming · 4:00 PM</span></div>
-      </div>
-      <div class="match-card" style="border-left-color:#00c853;">
-        <div class="match-comp">🏆 NNL CUP <span class="match-date">Mar 29, 2026</span></div>
-        <div class="match-teams">
-          <div class="match-team"><div class="match-team-name">DELTA FORCE FC</div><div class="match-team-tag">(H)</div></div>
-          <div class="match-score" style="background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);"><span class="match-score-num" style="font-size:1rem;color:var(--gray);">VS</span></div>
-          <div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(A)</div></div>
-        </div>
-        <div class="match-result"><span class="match-upcoming"><span class="live-dot"></span> Upcoming · 3:30 PM</span></div>
-      </div>
+    <div class="matches-grid" id="upcomingMatchesGrid" style="margin-bottom:40px;">
+      <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading upcoming fixtures...</div>
     </div>
 
     <h3 style="font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:2px;color:var(--gray);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--glass-border);">✅ Recent Results</h3>
-    <div class="matches-grid">
-      <div class="match-card"><div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 17, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">SUNRISE FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">1</span><span class="match-score-sep">–</span><span class="match-score-num">3</span></div><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-won">✓ Win</span></div></div>
-      <div class="match-card"><div class="match-comp">🏆 NNL CUP <span class="match-date">Mar 14, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">2</span><span class="match-score-sep">–</span><span class="match-score-num">0</span></div><div class="match-team"><div class="match-team-name">VICTORIA ISLAND FC</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-won">✓ Win</span></div></div>
-      <div class="match-card"><div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 10, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">FUTURE EAGLES FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">1</span><span class="match-score-sep">–</span><span class="match-score-num">1</span></div><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-lost">= Draw</span></div></div>
-      <div class="match-card"><div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Mar 3, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">4</span><span class="match-score-sep">–</span><span class="match-score-num">0</span></div><div class="match-team"><div class="match-team-name">LAGOS STARS</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-won">✓ Win</span></div></div>
-      <div class="match-card"><div class="match-comp">🏆 NNL CUP <span class="match-date">Feb 24, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">3</span><span class="match-score-sep">–</span><span class="match-score-num">1</span></div><div class="match-team"><div class="match-team-name">KANO PILLARS YOUTH</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-won">✓ Win</span></div></div>
-      <div class="match-card"><div class="match-comp">🏆 LAGOS YOUTH LEAGUE <span class="match-date">Feb 17, 2026</span></div>
-        <div class="match-teams"><div class="match-team"><div class="match-team-name">SUNSHINE FC</div><div class="match-team-tag">(H)</div></div><div class="match-score"><span class="match-score-num">2</span><span class="match-score-sep">–</span><span class="match-score-num">1</span></div><div class="match-team"><div class="match-team-name">NEWHOPE NAIJA FC</div><div class="match-team-tag">(A)</div></div></div>
-        <div class="match-result"><span class="match-lost">✗ Loss</span></div></div>
+    <div class="matches-grid" id="recentResultsGrid">
+      <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading recent results...</div>
     </div>
   </div>
 </section>
@@ -83,4 +52,56 @@ export function init() {
       tab.classList.add('active');
     });
   });
+
+  if (supabase) {
+    supabase.from('fixtures').select('*').order('match_date', { ascending: false }).then(({ data, error }) => {
+      const upcomingGrid = document.getElementById('upcomingMatchesGrid');
+      const recentGrid = document.getElementById('recentResultsGrid');
+      
+      if (!upcomingGrid || !recentGrid) return;
+      if (error || !data || data.length === 0) {
+        upcomingGrid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No upcoming matches.</p>';
+        recentGrid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No recent results.</p>';
+        return;
+      }
+
+      const upcomingItems = data.filter(f => f.status === 'scheduled' || f.status === 'live');
+      const recentItems = data.filter(f => f.status === 'completed' || f.status === 'postponed');
+
+      const renderMatch = (f) => {
+        let resultLabel = '';
+        let scoreUI = `<span class="match-score-num">${f.home_score ?? 0}</span><span class="match-score-sep">–</span><span class="match-score-num">${f.away_score ?? 0}</span>`;
+        
+        if (f.status === 'scheduled') {
+          scoreUI = `<div class="match-score" style="background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);"><span class="match-score-num" style="font-size:1rem;color:var(--gray);">VS</span></div>`;
+          resultLabel = `<span class="match-upcoming"><span class="live-dot"></span> ${t('matchUpcoming')}</span>`;
+        } else if (f.status === 'live') {
+          resultLabel = `<span class="match-live"><span class="live-dot badge-pulse"></span> LIVE</span>`;
+        } else if (f.status === 'completed') {
+          const isDraw = (f.home_score === f.away_score);
+          if (isDraw) resultLabel = `<span class="match-lost">${t('matchDraw')}</span>`;
+          else resultLabel = `<span class="match-won">${t('matchWin')}</span>`;
+        } else if (f.status === 'postponed') {
+          resultLabel = `<span class="match-lost" style="color:var(--gray);">Postponed</span>`;
+        }
+
+        const dateStr = new Date(f.match_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = new Date(f.match_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        return `
+          <div class="match-card" ${f.status === 'scheduled' ? 'style="border-left-color:#00c853;"' : ''}>
+            <div class="match-comp">🏆 ${f.competition || 'MATCH'} <span class="match-date">${dateStr}</span></div>
+            <div class="match-teams">
+              <div class="match-team"><div class="match-team-name">${f.home_team}</div><div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div></div>
+              ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
+              <div class="match-team"><div class="match-team-name">${f.away_team}</div><div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div></div>
+            </div>
+            <div class="match-result">${resultLabel} ${f.status === 'scheduled' ? ` · ${timeStr}` : ''}</div>
+          </div>`;
+      };
+
+      upcomingGrid.innerHTML = upcomingItems.length > 0 ? upcomingItems.map(renderMatch).join('') : '<p class="table-empty" style="grid-column: 1/-1;">No upcoming matches.</p>';
+      recentGrid.innerHTML = recentItems.length > 0 ? recentItems.map(renderMatch).join('') : '<p class="table-empty" style="grid-column: 1/-1;">No recent results.</p>';
+    });
+  }
 }
