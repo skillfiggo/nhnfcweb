@@ -128,12 +128,11 @@ export function render() {
 
 
 <!-- Ad Banner -->
-<div class="ad-banner-wrap container">
+<div class="ad-banner-wrap container" id="adBannerWrapper" style="display: none;">
   <div class="ad-banner">
     <span class="ad-banner-label">${t('adLabel')}</span>
-    <div class="ad-banner-content">
-      <!-- Replace this block with your ad tag / image / iframe -->
-      <span>${t('adText')}</span>
+    <div class="ad-banner-content" id="adBannerContent">
+      <!-- Dynamic content will be injected here -->
     </div>
   </div>
 </div>
@@ -442,6 +441,23 @@ export function init() {
           <div class="news-footer"><a href="#news-article?id=${n.id}" class="news-read-more">Read More →</a></div>
         </article>
       `).join('');
+    });
+  }
+  // Fetch Ad Banner
+  if (supabase) {
+    supabase.from('site_settings').select('value').eq('key', 'home_ad_banner').single().then(({ data }) => {
+      const banner = data?.value;
+      if (banner && banner.imageUrl) {
+        const wrapper = document.getElementById('adBannerWrapper');
+        const content = document.getElementById('adBannerContent');
+        if (wrapper && content) {
+          content.innerHTML = `
+            <a href="${banner.link || '#'}" target="_blank" style="display:block; width:100%; height:100%;">
+              <img src="${banner.imageUrl}" alt="Advertisement" style="width:100%; height:auto; display:block; border-radius:4px;">
+            </a>`;
+          wrapper.style.display = 'block';
+        }
+      }
     });
   }
 

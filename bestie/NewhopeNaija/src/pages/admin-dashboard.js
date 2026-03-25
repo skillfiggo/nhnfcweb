@@ -47,6 +47,7 @@ export function render() {
           <a class="sidebar-link" data-panel="news"><span class="sidebar-icon">📰</span> News</a>
           <a class="sidebar-link" data-panel="fixtures"><span class="sidebar-icon">⚽</span> Fixtures</a>
           <a class="sidebar-link" data-panel="users"><span class="sidebar-icon">🔐</span> Manage Users</a>
+          <a class="sidebar-link" data-panel="settings"><span class="sidebar-icon">⚙️</span> Settings</a>
           <button id="adminLogoutBtn" class="sidebar-link logout-btn"><span class="sidebar-icon">🚪</span> Logout</button>
         </nav>
       </aside>
@@ -842,6 +843,84 @@ async function changeUserRole(userId, newRole) {
   renderUsersPanel();
 }
 
+async function renderSettingsPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading settings...</div>`;
+
+  let currentBanner = null;
+  if (supabase) {
+    const { data } = await supabase.from('site_settings').select('value').eq('key', 'home_ad_banner').single();
+    currentBanner = data?.value;
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <h3>Global Settings</h3>
+    </div>
+    <div class="dash-card">
+      <div class="settings-group">
+        <h4>Homepage Advertisement Banner</h4>
+        <p class="settings-desc">Update the wide banner that appears below the hero section on the home page.</p>
+        
+        <form id="adBannerForm" class="modal-form" style="max-width: 600px; margin-top:20px;">
+          <div class="form-group">
+            <label>Current Banner Image</label>
+            <div id="adBannerPreview" class="image-preview" style="width: 100%; height: 120px; border-style: solid;">
+              ${currentBanner?.imageUrl ? `<img src="${currentBanner.imageUrl}" style="object-fit: contain;" />` : 'No banner set'}
+            </div>
+            <input type="file" id="adBannerFile" class="form-input" accept="image/*" />
+          </div>
+          <div class="form-group">
+            <label>Destination Link (URL)</label>
+            <input type="url" id="adBannerLink" class="form-input" value="${currentBanner?.link || ''}" placeholder="https://example.com" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="saveAdBtn">Save Banner Settings</button>
+        </form>
+      </div>
+    </div>`;
+
+  document.getElementById('adBannerForm')?.addEventListener('submit', saveAdBanner);
+}
+
+async function saveAdBanner(e) {
+  e.preventDefault();
+  const btn = document.getElementById('saveAdBtn');
+  const file = document.getElementById('adBannerFile').files[0];
+  const link = document.getElementById('adBannerLink').value;
+
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    let imageUrl = null;
+    if (file) {
+      const fName = `banners/home_ad_${Date.now()}`;
+      const { data, error } = await supabase.storage.from('adverts').upload(fName, file);
+      if (error) throw error;
+      const { data: pubData } = await supabase.storage.from('adverts').getPublicUrl(data.path);
+      imageUrl = pubData.publicUrl;
+    } else {
+      // Keep existing image if no new file uploaded
+      const { data: current } = await supabase.from('site_settings').select('value').eq('key', 'home_ad_banner').single();
+      imageUrl = current?.value?.imageUrl;
+    }
+
+    const { error } = await supabase.from('site_settings').upsert({
+      key: 'home_ad_banner',
+      value: { imageUrl, link }
+    });
+
+    if (error) throw error;
+    showToast('Banner settings saved!');
+    renderSettingsPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Banner Settings';
+    btn.disabled = false;
+  }
+}
+
 async function loadAdminProfile() {
   if (!supabase) return;
   const { data: { user } } = await supabase.auth.getUser();
@@ -906,6 +985,7 @@ const panelRenderers = {
   news: renderNewsPanel,
   fixtures: renderFixturesPanel,
   users: renderUsersPanel,
+  settings: renderSettingsPanel,
 };
 const panelTitles = {
   overview: 'Overview',
@@ -913,6 +993,7 @@ const panelTitles = {
   news: 'News Manager',
   fixtures: 'Fixtures & Results',
   users: 'Manage Users',
+  settings: 'Global Settings',
 };
 
 export function init() {
