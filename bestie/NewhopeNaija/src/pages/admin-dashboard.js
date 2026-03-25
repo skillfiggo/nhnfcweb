@@ -212,17 +212,27 @@ export function render() {
         </div>
         <form id="newsForm" class="modal-form">
           <input type="hidden" id="newsFormId" />
-          <div class="form-group">
-            <label>Headline *</label>
-            <input type="text" id="nTitle" class="form-input" required placeholder="News headline..." />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Headline (English) *</label>
+              <input type="text" id="nTitle" class="form-input" required placeholder="English headline..." />
+            </div>
+            <div class="form-group">
+              <label>Headline (Chinese) *</label>
+              <input type="text" id="nTitleZh" class="form-input" required placeholder="中文标题..." />
+            </div>
           </div>
           <div class="form-group">
             <label>Image URL</label>
             <input type="url" id="nImage" class="form-input" placeholder="https://..." />
           </div>
           <div class="form-group">
-            <label>Body *</label>
-            <textarea id="nBody" class="form-input" rows="6" required placeholder="Write your news content..."></textarea>
+            <label>Body (English) *</label>
+            <textarea id="nBody" class="form-input" rows="4" required placeholder="Write English content..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Body (Chinese) *</label>
+            <textarea id="nBodyZh" class="form-input" rows="4" required placeholder="编写中文内容..."></textarea>
           </div>
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
@@ -615,8 +625,10 @@ async function loadNewsForEdit(id) {
   document.getElementById('newsModalTitle').textContent = 'Edit News';
   document.getElementById('newsFormId').value = id;
   document.getElementById('nTitle').value = n?.title || '';
+  document.getElementById('nTitleZh').value = n?.title_zh || '';
   document.getElementById('nImage').value = n?.image_url || '';
   document.getElementById('nBody').value = n?.body || '';
+  document.getElementById('nBodyZh').value = n?.body_zh || '';
   document.getElementById('nPublished').checked = n?.published || false;
   openModal('newsModal');
 }
@@ -629,8 +641,10 @@ async function saveNews(e) {
   const { data: { user } } = await supabase.auth.getUser();
   const payload = {
     title: document.getElementById('nTitle').value,
+    title_zh: document.getElementById('nTitleZh').value,
     image_url: document.getElementById('nImage').value,
     body: document.getElementById('nBody').value,
+    body_zh: document.getElementById('nBodyZh').value,
     published: document.getElementById('nPublished').checked,
     author_id: user?.id,
     updated_at: new Date().toISOString(),

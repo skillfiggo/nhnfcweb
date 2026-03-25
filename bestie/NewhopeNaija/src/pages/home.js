@@ -431,16 +431,20 @@ export function init() {
         grid.innerHTML = '<p class="table-empty" style="grid-column: 1/-1;">No news available at the moment.</p>';
         return;
       }
-      grid.innerHTML = data.map(n => `
+      grid.innerHTML = data.map(n => {
+        const lang = getLang();
+        const title = (lang === 'zh' && n.title_zh) ? n.title_zh : n.title;
+        const body = (lang === 'zh' && n.body_zh) ? n.body_zh : n.body;
+        return `
         <article class="news-card">
           <div class="news-img">
             ${n.image_url ? `<img src="${n.image_url}" alt="news image" style="width:100%;height:100%;object-fit:cover;">` : `<div class="news-img-placeholder" style="background:linear-gradient(135deg,#cc000033,#001f5b33);">📰</div>`}
             <span class="news-cat-badge">Club News</span>
           </div>
-          <div class="news-body"><div class="news-date">📅 ${new Date(n.created_at).toLocaleDateString()}</div><h3 class="news-title">${n.title}</h3><p class="news-excerpt">${n.body.substring(0, 100)}...</p></div>
+          <div class="news-body"><div class="news-date">📅 ${new Date(n.created_at).toLocaleDateString()}</div><h3 class="news-title">${title}</h3><p class="news-excerpt">${body.substring(0, 100)}...</p></div>
           <div class="news-footer"><a href="#news-article?id=${n.id}" class="news-read-more">Read More →</a></div>
-        </article>
-      `).join('');
+        </article>`;
+      }).join('');
     });
   }
   // Fetch Ad Banner
