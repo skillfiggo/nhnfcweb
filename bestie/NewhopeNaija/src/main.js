@@ -34,11 +34,17 @@ function updateStaticTranslations() {
 }
 
 // ===== Supabase Auth Listener =====
+// We listen for PASSWORD_RECOVERY (for resets) and handle invites via the URL hash below
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
     window.location.hash = '#setup-password';
   }
 });
+
+// Extra check for Email Invites (sometimes event doesn't fire as expected on first load)
+if (window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')) {
+  window.location.hash = '#setup-password';
+}
 
 // ===== Register Routes =====
 register('home', home);
