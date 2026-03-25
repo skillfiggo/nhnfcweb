@@ -142,11 +142,7 @@ export function render() {
   <div class="ticker-inner">
     <div class="ticker-label">${t('tickerLabel')}</div>
     <div class="ticker-track" id="tickerTrack">
-      <span class="ticker-item">NEWHOPE NAIJA FC 3 – 1 SUNRISE FC <span class="ticker-sep">|</span></span>
-      <span class="ticker-item">LAGOS STARS 0 – 2 NEWHOPE NAIJA FC <span class="ticker-sep">|</span></span>
-      <span class="ticker-item">NEWHOPE NAIJA FC 1 – 1 FUTURE EAGLES FC <span class="ticker-sep">|</span></span>
-      <span class="ticker-item">VICTORIA FC 0 – 4 NEWHOPE NAIJA FC <span class="ticker-sep">|</span></span>
-      <span class="ticker-item">UPCOMING: NEWHOPE NAIJA FC vs ABUJA UNITED — Mar 22 <span class="ticker-sep">|</span></span>
+      <span class="ticker-item">Loading latest results...</span>
     </div>
   </div>
 </div>
@@ -472,6 +468,30 @@ export function init() {
     });
   }
 
+  // Fetch Ticker Data
+  if (supabase) {
+    supabase.from('fixtures').select('*').order('match_date', { ascending: false }).then(({ data, error }) => {
+      const ticker = document.getElementById('tickerTrack');
+      if (ticker && data && data.length > 0) {
+        ticker.innerHTML = data.map(f => {
+          if (f.status === 'completed' || f.status === 'live') {
+            const statusLabel = f.status === 'live' ? '<span style="color:var(--red-light);font-weight:bold;">LIVE</span> ' : '';
+            return `<span class="ticker-item">${statusLabel}${f.home_team} ${f.home_score ?? 0} – ${f.away_score ?? 0} ${f.away_team} <span class="ticker-sep">|</span></span>`;
+          } else if (f.status === 'scheduled') {
+            const d = new Date(f.match_date);
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return `<span class="ticker-item">UPCOMING: ${f.home_team} vs ${f.away_team} — ${dateStr} <span class="ticker-sep">|</span></span>`;
+          }
+          return '';
+        }).join('') || '<span class="ticker-item">Season 2026/2027 Underway <span class="ticker-sep">|</span></span>';
+        
+        // Loop the content for a continuous animation
+        if (data.length > 2) {
+          ticker.innerHTML += ticker.innerHTML;
+        }
+      }
+    });
+  }
 }
 
 function footerHTML() {
