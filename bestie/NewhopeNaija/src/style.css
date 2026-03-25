@@ -1715,3 +1715,20 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .profile-modal-header h2 { font-size: 2rem; }
   .profile-stats-grid { grid-template-columns: 1fr; }
 }
+/* ===== Auth Utilities ===== */
+.auth-error {
+  background: rgba(204,0,0,0.1);
+  border-left: 3px solid var(--red);
+  color: #ff4d4d;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+.auth-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, var(--dark-3) 0%, var(--dark) 100%);
+}
