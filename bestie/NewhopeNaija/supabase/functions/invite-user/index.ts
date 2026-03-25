@@ -22,7 +22,8 @@ serve(async (req) => {
     );
 
     // Verify the user calling this is an admin
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const token = authHeader.replace('Bearer ', '').trim();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) throw new Error("Unauthorized: " + (userError?.message || "No user"));
 
     const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();

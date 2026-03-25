@@ -484,14 +484,32 @@ async function savePlayer(e) {
         body: { email: profileData.email }
       });
       
-      if (invokeError) throw new Error(invokeError.message || "Failed to run edge function.");
+      if (invokeError) {
+        let msg = invokeError.message;
+        try {
+          if (invokeError.context && typeof invokeError.context.json === 'function') {
+            const body = await invokeError.context.json();
+            msg = body.error || msg;
+          }
+        } catch (e) { /* ignore parse error */ }
+        throw new Error(msg);
+      }
       if (invokeData?.error) throw new Error(invokeData.error);
       
       const newUserId = invokeData.user.id;
       
       // The trigger created an empty profile. Now update it.
-      await supabase.from('profiles').update(profileData).eq('id', newUserId);
-      await supabase.from('player_stats').insert({ player_id: newUserId, ...statsData });
+      const { error: profileErr } = await supabase.from('profiles').update(profileData).eq('id', newUserId);
+      if (profileErr) throw profileErr;
+      
+      const { data: existingStat } = await supabase.from('player_stats').select('id').eq('player_id', newUserId).single();
+      if (existingStat) {
+        const { error: statsErr } = await supabase.from('player_stats').update(statsData).eq('player_id', newUserId);
+        if (statsErr) throw statsErr;
+      } else {
+        const { error: statsErr } = await supabase.from('player_stats').insert({ player_id: newUserId, ...statsData });
+        if (statsErr) throw statsErr;
+      }
       
       showToast('Player invited and profile beautifully setup!');
     }
