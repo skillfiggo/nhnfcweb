@@ -861,6 +861,7 @@ async function renderSettingsPanel() {
       <div class="settings-group">
         <h4>Homepage Advertisement Banner</h4>
         <p class="settings-desc">Update the wide banner that appears below the hero section on the home page.</p>
+        <p class="panel-hint" style="margin-top: 5px;">💡 Recommended size: <strong>728 x 90px</strong> (Standard Leaderboard) for best results.</p>
         
         <form id="adBannerForm" class="modal-form" style="max-width: 600px; margin-top:20px;">
           <div class="form-group">

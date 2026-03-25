@@ -128,7 +128,7 @@ export function render() {
 
 
 <!-- Ad Banner -->
-<div class="ad-banner-wrap container" id="adBannerWrapper" style="display: none;">
+<div class="ad-banner-wrap" id="adBannerWrapper" style="display: none;">
   <div class="ad-banner">
     <span class="ad-banner-label">${t('adLabel')}</span>
     <div class="ad-banner-content" id="adBannerContent">
