@@ -55,7 +55,7 @@ export function render() {
       <main class="dashboard-main">
         <header class="dashboard-header">
           <h2 id="panelTitle">Overview</h2>
-          <div class="header-user">
+          <div class="header-user" id="adminHeaderUser" style="cursor: pointer;" title="Edit My Profile">
             <div class="user-avatar" id="adminAvatar">A</div>
             <div class="user-info">
               <span class="user-name" id="adminName">Admin User</span>
@@ -134,17 +134,15 @@ export function render() {
               <input type="text" id="pPreviousLicense" class="form-input" />
             </div>
           </div>
-          <div class="form-group">
-            <label>Previous Club (Optional)</label>
-            <input type="text" id="pPreviousClub" class="form-input" placeholder="Name of previous club" />
-          </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Upload Passport (Live Camera)</label>
+              <label>Passport Preview</label>
+              <div id="pPassportPreview" class="image-preview"></div>
               <input type="file" id="pPassportPhoto" class="form-input" accept="image/*" capture="user" />
             </div>
             <div class="form-group">
-              <label>Upload Photo</label>
+              <label>Profile Photo Preview</label>
+              <div id="pProfilePreview" class="image-preview"></div>
               <input type="file" id="pProfilePhoto" class="form-input" accept="image/*" />
             </div>
           </div>
@@ -174,6 +172,31 @@ export function render() {
           <div class="modal-actions">
             <button type="button" class="btn btn-outline" data-close="playerModal">Cancel</button>
             <button type="submit" class="btn btn-primary" id="playerFormSubmitBtn">Save Player</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Admin Profile Modal ── -->
+    <div class="modal-overlay" id="adminProfileModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Edit My Profile</h3>
+          <button class="modal-close" data-close="adminProfileModal">✕</button>
+        </div>
+        <form id="adminProfileForm" class="modal-form">
+          <div class="form-group">
+            <label>My Full Name *</label>
+            <input type="text" id="adminEditName" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Profile Picture</label>
+            <div id="adminEditAvatarPreview" class="image-preview-lg"></div>
+            <input type="file" id="adminEditAvatarFile" class="form-input" accept="image/*" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="adminProfileModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="adminProfileSubmitBtn">Save Changes</button>
           </div>
         </form>
       </div>
@@ -339,7 +362,14 @@ async function renderPlayersPanel() {
         return `
           <tr>
             <td><strong>#${p.shirt_number ?? '--'}</strong></td>
-            <td>${p.full_name || 'Unknown'}</td>
+            <td>
+              <div class="user-info-cell">
+                <div class="user-avatar-sm">
+                  ${p.avatar_url ? `<img src="${p.avatar_url}" alt="" />` : (p.full_name?.charAt(0) || '?')}
+                </div>
+                <span>${p.full_name || 'Unknown'}</span>
+              </div>
+            </td>
             <td>${p.position || '--'}</td>
             <td>${salary}</td>
             <td><span class="badge ${healthClass}">${health}</span></td>
@@ -401,10 +431,9 @@ async function loadPlayerForEdit(playerId) {
   document.getElementById('pPreviousClub').value = p?.previous_club || '';
   document.getElementById('pDob').value = p?.date_of_birth || '';
   document.getElementById('pBio').value = p?.bio || '';
-  document.getElementById('pPassportPhoto').value = '';
-  document.getElementById('pProfilePhoto').value = '';
-  document.getElementById('pHealth').value = stats?.health_status || 'fit';
-  document.getElementById('pSalary').value = stats?.salary_amount || '';
+  document.getElementById('pPassportPreview').innerHTML = p?.passport_photo_url ? `<img src="${p.passport_photo_url}" style="width:100px; height:auto; border-radius:4px;" />` : 'No passport';
+  document.getElementById('pProfilePreview').innerHTML = p?.avatar_url ? `<img src="${p.avatar_url}" style="width:100px; height:auto; border-radius:4px;" />` : 'No profile photo';
+  
   openModal('playerModal');
 }
 
@@ -813,6 +842,63 @@ async function changeUserRole(userId, newRole) {
   renderUsersPanel();
 }
 
+async function loadAdminProfile() {
+  if (!supabase) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  
+  document.getElementById('adminEditName').value = p?.full_name || '';
+  document.getElementById('adminEditAvatarPreview').innerHTML = p?.avatar_url 
+    ? `<img src="${p.avatar_url}" style="width:80px; height:80px; border-radius:50%; object-fit:cover;" />` 
+    : 'No photo set';
+  openModal('adminProfileModal');
+}
+
+async function saveAdminProfile(e) {
+  e.preventDefault();
+  const btn = document.getElementById('adminProfileSubmitBtn');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const fullName = document.getElementById('adminEditName').value;
+  const avatarFile = document.getElementById('adminEditAvatarFile').files[0];
+  let avatarUrl = null;
+
+  if (avatarFile) {
+    const fName = `avatars/${user.id}_${Date.now()}`;
+    const { data: uploadData, error: uploadErr } = await supabase.storage.from('players').upload(fName, avatarFile);
+    if (!uploadErr && uploadData) {
+      const { data: pubData } = await supabase.storage.from('players').getPublicUrl(uploadData.path);
+      avatarUrl = pubData.publicUrl;
+    }
+  }
+
+  const payload = { full_name: fullName };
+  if (avatarUrl) payload.avatar_url = avatarUrl;
+
+  const { error } = await supabase.from('profiles').update(payload).eq('id', user.id);
+  
+  if (error) {
+    showToast('Error: ' + error.message, 'error');
+  } else {
+    showToast('Profile updated!');
+    document.getElementById('adminName').textContent = fullName;
+    if (avatarUrl || (payload.avatar_url)) {
+      const finalUrl = avatarUrl || payload.avatar_url;
+      document.getElementById('adminAvatar').innerHTML = `<img src="${finalUrl}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
+    } else {
+      document.getElementById('adminAvatar').textContent = fullName[0].toUpperCase();
+    }
+    closeModal('adminProfileModal');
+  }
+  btn.textContent = 'Save Changes';
+  btn.disabled = false;
+}
+
 // ─── Init ────────────────────────────────────────────────────
 const panelRenderers = {
   overview: renderOverviewPanel,
@@ -836,19 +922,24 @@ export function init() {
   if (supabase) {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
         if (data?.full_name) {
           document.getElementById('adminName').textContent = data.full_name;
-          document.getElementById('adminAvatar').textContent = data.full_name[0].toUpperCase();
+          if (data.avatar_url) {
+            document.getElementById('adminAvatar').innerHTML = `<img src="${data.avatar_url}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
+          } else {
+            document.getElementById('adminAvatar').textContent = data.full_name[0].toUpperCase();
+          }
         }
       });
     });
   }
 
-  // Render default panel
-  renderOverviewPanel();
+  // Header interaction
+  document.getElementById('adminHeaderUser')?.addEventListener('click', loadAdminProfile);
+  document.getElementById('adminProfileForm')?.addEventListener('submit', saveAdminProfile);
 
-  // Sidebar nav
+  // Sidebar Controls
   document.querySelectorAll('.sidebar-link[data-panel]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -860,26 +951,31 @@ export function init() {
     });
   });
 
-  // Modal close buttons
-  document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', () => closeModal(btn.dataset.close));
-  });
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) overlay.classList.remove('active');
-    });
+  // Universal Modal Closers
+  document.body.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-close') || e.target.getAttribute('data-close')) {
+      const modalId = e.target.getAttribute('data-close') || e.target.closest('.modal-overlay')?.id;
+      if (modalId) closeModal(modalId);
+    }
+    if (e.target.classList.contains('modal-overlay')) {
+      closeModal(e.target.id);
+    }
   });
 
-  // Form submissions
+  // Form Submissions
   document.getElementById('playerForm')?.addEventListener('submit', savePlayer);
   document.getElementById('newsForm')?.addEventListener('submit', saveNews);
   document.getElementById('fixtureForm')?.addEventListener('submit', saveFixture);
 
   // Logout
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
+    if (!confirm('Logout from Admin Panel?')) return;
+    await supabase.auth.signOut();
     localStorage.removeItem('nhfc_user_role');
     localStorage.removeItem('nhfc_user_id');
-    if (supabase) await supabase.auth.signOut();
-    window.location.hash = '#home';
+    window.location.hash = '#login';
   });
+
+  // Render default panel
+  renderOverviewPanel();
 }
