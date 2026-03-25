@@ -452,8 +452,8 @@ export function init() {
         const content = document.getElementById('adBannerContent');
         if (wrapper && content) {
           content.innerHTML = `
-            <a href="${banner.link || '#'}" target="_blank" style="display:block; width:100%; height:100%;">
-              <img src="${banner.imageUrl}" alt="Advertisement" style="width:100%; height:auto; display:block; border-radius:4px;">
+            <a href="${banner.link || '#'}" target="_blank" style="display:block; width:100%;">
+              <img src="${banner.imageUrl}" alt="Advertisement" style="width:100%; height:auto; display:block;">
             </a>`;
           wrapper.style.display = 'block';
         }
