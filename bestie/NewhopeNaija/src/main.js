@@ -22,6 +22,8 @@ import * as contact from './pages/contact.js';
 import * as login from './pages/login.js';
 import * as adminDashboard from './pages/admin-dashboard.js';
 import * as playerDashboard from './pages/player-dashboard.js';
+import * as setupPassword from './pages/setup-password.js';
+import { supabase } from './lib/supabase.js';
 import { t } from './i18n.js';
 
 function updateStaticTranslations() {
@@ -30,6 +32,13 @@ function updateStaticTranslations() {
     el.innerHTML = t(key); // Use innerHTML in case translations include HTML tags like <br>
   });
 }
+
+// ===== Supabase Auth Listener =====
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    window.location.hash = '#setup-password';
+  }
+});
 
 // ===== Register Routes =====
 register('home', home);
@@ -42,6 +51,7 @@ register('contact', contact);
 register('login', login);
 register('admin-dashboard', adminDashboard);
 register('player-dashboard', playerDashboard);
+register('setup-password', setupPassword);
 
 // ===== Preloader =====
 window.addEventListener('load', () => {
