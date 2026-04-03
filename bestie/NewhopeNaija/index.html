@@ -32,9 +32,9 @@
       <div class="mega-nav-links">
         <a href="#home" class="mega-link active-link" data-panel="panel-home"><span class="mega-icon">🏠</span> <span data-i18n="navHome">HOME</span></a>
         <a href="#news" class="mega-link" data-panel="panel-news"><span class="mega-icon">📰</span> <span data-i18n="navNews">NEWS</span></a>
-        <a href="#matches-page" class="mega-link" data-panel="panel-competitions"><span class="mega-icon">📋</span> <span data-i18n="navCompetitions">COMPETITIONS</span></a>
         <a href="#players" class="mega-link" data-panel="panel-players"><span class="mega-icon">👥</span> <span data-i18n="navPlayers">PLAYERS</span></a>
-        <a href="#about" class="mega-link" data-panel="panel-home"><span class="mega-icon">⚽</span> <span data-i18n="navAbout">ABOUT</span></a>
+        <a href="#history" class="mega-link" data-panel="panel-about"><span class="mega-icon">⚽</span> <span data-i18n="navAbout">ABOUT</span></a>
+        <a href="#contact" class="mega-link" data-panel="panel-contact"><span class="mega-icon">📞</span> <span data-i18n="navContactUs">CONTACT US</span></a>
       </div>
     </div>
 
@@ -51,39 +51,50 @@
         </a>
       </div>
 
+      <!-- Panel: About -->
+      <div class="mega-panel" id="panel-about">
+        <a href="#history" class="mega-panel-col">
+          <img src="/images/hero-slide-1.jpg" alt="Our History" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navOurHistory">OUR HISTORY</div>
+        </a>
+        <a href="#gallery" class="mega-panel-col">
+          <img src="/images/hero-slide-2.jpg" alt="Gallery" class="mega-feature-img" />
+          <div class="mega-feature-overlay" data-i18n="navGallery">GALLERY</div>
+        </a>
+      </div>
+
       <!-- Panel: News -->
       <div class="mega-panel" id="panel-news">
         <a href="#news" class="mega-panel-col">
           <img src="/images/hero-slide-2.jpg" alt="Blog" class="mega-feature-img" />
           <div class="mega-feature-overlay" data-i18n="navBlog">BLOG</div>
         </a>
-        <a href="#news" class="mega-panel-col">
+        <a href="#newhope-tv" class="mega-panel-col">
           <img src="/images/hero-slide-3.jpg" alt="NewHope TV" class="mega-feature-img" />
           <div class="mega-feature-overlay" data-i18n="navTV">NEWHOPE TV</div>
         </a>
       </div>
 
-      <!-- Panel: Competitions -->
-      <div class="mega-panel" id="panel-competitions">
-        <a href="#matches-page" class="mega-panel-col">
-          <img src="/images/hero-slide-1.jpg" alt="Friendly" class="mega-feature-img" />
-          <div class="mega-feature-overlay" data-i18n="navFriendly">FRIENDLY</div>
-        </a>
-        <a href="#matches-page" class="mega-panel-col">
-          <img src="/images/hero-slide-2.jpg" alt="NLO" class="mega-feature-img" />
-          <div class="mega-feature-overlay" data-i18n="navNLO">NLO</div>
-        </a>
-      </div>
 
       <!-- Panel: Players -->
       <div class="mega-panel" id="panel-players">
-        <a href="#players" class="mega-panel-col">
+        <a href="#players?squad=u19" class="mega-panel-col">
           <img src="/images/hero-slide-3.jpg" alt="Under-19" class="mega-feature-img" />
           <div class="mega-feature-overlay" data-i18n="navU19">UNDER-19</div>
         </a>
-        <a href="#players" class="mega-panel-col">
+        <a href="#players?squad=u17" class="mega-panel-col">
           <img src="/images/hero-slide-1.jpg" alt="Under-17" class="mega-feature-img" />
           <div class="mega-feature-overlay" data-i18n="navU17">UNDER-17</div>
+        </a>
+      </div>
+    
+      <!-- Panel: Contact Us -->
+      <div class="mega-panel" id="panel-contact">
+        <a href="#contact" id="megaContactLink">
+          <div class="mega-image-feature">
+            <img src="/images/contact-hero.jpg" alt="Contact Us" class="mega-feature-img" />
+            <div class="mega-feature-overlay" data-i18n="navContactUs">CONTACT US</div>
+          </div>
         </a>
       </div>
 
@@ -96,17 +107,35 @@
         Welcome to the official website of NewHope Naija FC. Stay up to date with the latest news, match highlights, player features, and exclusive behind-the-scenes content.
       </p>
       <div class="mega-social-icons">
-        <a href="#">✕</a>
-        <a href="#">📷</a>
-        <a href="#">🎵</a>
-        <a href="#">▶</a>
+        <a href="#" aria-label="X (Twitter)">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+        </a>
+        <a href="#" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2-1.74 2.89 2.89 0 0 1 2.89-2.89 2.89 2.89 0 0 1 1.5.42V7.71a6.08 6.08 0 0 0-4.39-.51 6.32 6.32 0 0 0-4.63 4.29 6.3 6.3 0 0 0 1 6.39 6.32 6.32 0 0 0 5.09 2.05 6.32 6.32 0 0 0 6.06-6.19V8.67a8.21 8.21 0 0 0 4.9 1.63V6.86a4.81 4.81 0 0 1-0-0.17z"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.95C18.88 4 12 4 12 4s-6.88 0-8.6.47a2.78 2.78 0 0 0-1.94 1.95C1 8.16 1 12 1 12s0 3.84.46 5.58a2.78 2.78 0 0 0 1.94 1.95C5.12 20 12 20 12 20s6.88 0 8.6-.47a2.78 2.78 0 0 0 1.94-1.95C23 15.84 23 12 23 12s0-3.84-.46-5.58zM9.54 15.18V8.82L15.46 12z"/>
+          </svg>
+        </a>
       </div>
       <div class="mega-footer-text" data-i18n="navFooterText">NewHope Naija FC ©2026<br>All rights reserved</div>
     </div>
   </div>
 </nav>
 <!-- Top Utility Bar -->
-<div id="topbar" style="position:absolute; top:0; left:0; right:0; z-index:1001; border-bottom:1px solid rgba(255,255,255,0.05); padding:12px 0;">
+<div id="topbar" style="position:absolute; top:0; left:0; right:0; z-index:1050; border-bottom:1px solid rgba(255,255,255,0.05); padding:12px 0;">
   <div class="container" style="display:flex; justify-content:flex-end; align-items:center; gap:24px;">
     <a href="#login" class="nav-login-btn" style="color:var(--light-gray); font-weight:600; font-size:0.75rem; text-decoration:none; display:flex; align-items:center; gap:6px; letter-spacing:1px; text-transform:uppercase; transition:color 0.2s;">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
@@ -136,7 +165,7 @@
         <h4 data-i18n="quickLinks">Quick Links</h4>
         <div class="suggestion-tags">
           <a href="#news" class="tag tag-outline search-link">Transfer News</a>
-          <a href="#players" class="tag tag-outline search-link">Academy Players</a>
+          <a href="#players" class="tag tag-outline search-link">Club Players</a>
           <a href="#matches-page" class="tag tag-outline search-link">Fixtures</a>
           <a href="#gallery" class="tag tag-outline search-link">Match Photos</a>
         </div>

@@ -8,7 +8,7 @@ export function render() {
         <div class="login-overlay"></div>
         <div class="login-left-content">
           <img src="/images/logo.png" alt="Logo" class="login-brand-logo" />
-          <h2 class="login-welcome-title">Welcome to the <span>Academy</span></h2>
+          <h2 class="login-welcome-title">Welcome to the <span>Club</span></h2>
           <p class="login-welcome-desc">Join the next generation of football stars. Set your secure password to access your player profile and training schedule.</p>
         </div>
       </div>

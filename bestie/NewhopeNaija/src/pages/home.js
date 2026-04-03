@@ -1,4 +1,4 @@
-import { t } from '../i18n.js';
+import { t, getLang } from '../i18n.js';
 import { supabase } from '../lib/supabase.js';
 
 export const title = 'Home';
@@ -7,13 +7,7 @@ export function render() {
   return `
 <!-- Hero Slider -->
 <section id="hero-slider-wrap">
-  <div class="secondary-menu container">
-    <div class="secondary-menu-left">
-      <a href="#gallery">${t('navGallery')}</a>
-      <a href="#contact">${t('navContactUs')}</a>
-    </div>
-
-  </div>
+  <div class="secondary-menu container" style="min-height: 40px;"></div>
   <div id="hero">
     <div class="hero-slides" id="heroSlides">
       <!-- Slide 1 -->
@@ -36,13 +30,6 @@ export function render() {
                 <span class="red">NAIJA</span><br>
                 <span class="navy">${t('heroTitleNavy')}</span>
               </h1>
-              <p class="hero-desc">
-                ${t('heroDesc1')}
-              </p>
-              <div class="hero-actions">
-                <a href="#news" class="btn btn-primary">${t('btnLatestNews')}</a>
-                <a href="#players" class="btn btn-outline">${t('btnOurSquad')}</a>
-              </div>
             </div>
             <div class="hero-right">
               <div class="hero-badge-wrap">
@@ -74,12 +61,6 @@ export function render() {
                 ${t('heroTitle2A')}<br>
                 <span class="red">${t('heroTitle2B')}</span>
               </h1>
-              <p class="hero-desc">
-                ${t('heroDesc2')}
-              </p>
-              <div class="hero-actions">
-                <a href="#contact" class="btn btn-primary">${t('btnRegister')}</a>
-              </div>
             </div>
           </div>
         </div>
@@ -103,12 +84,6 @@ export function render() {
                 ${t('heroTitle3A')}<br>
                 <span>${t('heroTitle3B')}</span>
               </h1>
-              <p class="hero-desc">
-                ${t('heroDesc3')}
-              </p>
-              <div class="hero-actions">
-                <a href="#gallery" class="btn btn-primary">${t('btnGallery')}</a>
-              </div>
             </div>
           </div>
         </div>
@@ -202,39 +177,8 @@ export function render() {
     <div class="table-wrap reveal">
       <table class="standings-table">
         <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Form</th></tr></thead>
-        <tbody>
-          <tr class="highlight-row">
-            <td><strong>1</strong></td>
-            <td><div class="team-cell"><div class="team-badge">🔴</div><strong>NewHope Naija FC</strong></div></td>
-            <td>14</td><td>10</td><td>2</td><td>2</td><td>+18</td>
-            <td><strong style="color:var(--red-light)">32</strong></td>
-            <td><div class="form-badges"><div class="form-w">W</div><div class="form-w">W</div><div class="form-d">D</div><div class="form-w">W</div><div class="form-w">W</div></div></td>
-          </tr>
-          <tr>
-            <td>2</td><td><div class="team-cell"><div class="team-badge">⚡</div>Lagos Stars</div></td>
-            <td>14</td><td>9</td><td>2</td><td>3</td><td>+14</td><td>29</td>
-            <td><div class="form-badges"><div class="form-w">W</div><div class="form-l">L</div><div class="form-w">W</div><div class="form-w">W</div><div class="form-d">D</div></div></td>
-          </tr>
-          <tr>
-            <td>3</td><td><div class="team-cell"><div class="team-badge">🌟</div>Sunrise FC</div></td>
-            <td>14</td><td>8</td><td>3</td><td>3</td><td>+10</td><td>27</td>
-            <td><div class="form-badges"><div class="form-d">D</div><div class="form-w">W</div><div class="form-l">L</div><div class="form-w">W</div><div class="form-w">W</div></div></td>
-          </tr>
-          <tr>
-            <td>4</td><td><div class="team-cell"><div class="team-badge">🦅</div>Future Eagles FC</div></td>
-            <td>14</td><td>7</td><td>4</td><td>3</td><td>+8</td><td>25</td>
-            <td><div class="form-badges"><div class="form-w">W</div><div class="form-d">D</div><div class="form-d">D</div><div class="form-l">L</div><div class="form-w">W</div></div></td>
-          </tr>
-          <tr>
-            <td>5</td><td><div class="team-cell"><div class="team-badge">🏙️</div>Victoria Island FC</div></td>
-            <td>14</td><td>5</td><td>3</td><td>6</td><td>-4</td><td>18</td>
-            <td><div class="form-badges"><div class="form-l">L</div><div class="form-l">L</div><div class="form-w">W</div><div class="form-d">D</div><div class="form-l">L</div></div></td>
-          </tr>
-          <tr>
-            <td>6</td><td><div class="team-cell"><div class="team-badge">🏛️</div>Abuja United FC</div></td>
-            <td>14</td><td>4</td><td>2</td><td>8</td><td>-12</td><td>14</td>
-            <td><div class="form-badges"><div class="form-l">L</div><div class="form-w">W</div><div class="form-l">L</div><div class="form-l">L</div><div class="form-d">D</div></div></td>
-          </tr>
+        <tbody id="standingsBody">
+          <!-- Dynamic Standings -->
         </tbody>
       </table>
     </div>
@@ -248,31 +192,8 @@ export function render() {
       <h2 class="section-title">${t('ourHighlights')} <span>${t('highlightsSpan')}</span></h2>
       <p class="section-subtitle">${t('highlightsSub')}</p>
     </div>
-    <div class="highlights-grid">
-      <div class="highlight-card">
-        <div class="highlight-thumb">
-          <div class="highlight-overlay"></div>
-          <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">⚽</div>
-        </div>
-        <div class="highlight-body"><div class="highlight-comp">Lagos Youth League · MD 14</div><div class="highlight-title">NEWHOPE NAIJA FC 3 – 1 SUNRISE FC · Full Match Highlights</div></div>
-      </div>
-      <div class="highlight-card">
-        <div class="highlight-thumb">
-          <div class="highlight-overlay"></div>
-          <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">🏆</div>
-        </div>
-        <div class="highlight-body"><div class="highlight-comp">NNL Cup · MD 11</div><div class="highlight-title">NEWHOPE NAIJA FC 2 – 0 VICTORIA ISLAND FC</div></div>
-      </div>
-      <div class="highlight-card">
-        <div class="highlight-thumb">
-          <div class="highlight-overlay"></div>
-          <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">⚡</div>
-        </div>
-        <div class="highlight-body"><div class="highlight-comp">Lagos Youth League · MD 13</div><div class="highlight-title">FUTURE EAGLES FC 1 – 1 NEWHOPE NAIJA FC</div></div>
-      </div>
+    <div class="highlights-grid" id="highlightsGrid">
+      <div class="panel-loading" style="grid-column:1/-1;text-align:center;color:var(--gray);">Loading highlights...</div>
     </div>
     <div style="text-align:center;margin-top:32px;"><a href="#gallery" class="btn btn-outline">${t('btnMoreHighlights')}</a></div>
   </div>
@@ -440,9 +361,17 @@ export function init() {
           <div class="match-card" ${f.status === 'scheduled' ? 'style="border-left-color:#00c853;"' : ''}>
             <div class="match-comp">🏆 ${f.competition || 'MATCH'} <span class="match-date">${dateStr}</span></div>
             <div class="match-teams">
-              <div class="match-team"><div class="match-team-name">${f.home_team}</div><div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div></div>
+              <div class="match-team">
+                ${f.home_logo ? `<img src="${f.home_logo}" class="team-logo-small" alt="${f.home_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
+                <div class="match-team-name">${f.home_team}</div>
+                <div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div>
+              </div>
               ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
-              <div class="match-team"><div class="match-team-name">${f.away_team}</div><div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div></div>
+              <div class="match-team">
+                ${f.away_logo ? `<img src="${f.away_logo}" class="team-logo-small" alt="${f.away_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
+                <div class="match-team-name">${f.away_team}</div>
+                <div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div>
+              </div>
             </div>
             <div class="match-result">${resultLabel} ${f.status === 'scheduled' ? ` · ${timeStr}` : ''}</div>
           </div>`;
@@ -465,6 +394,38 @@ export function init() {
           wrapper.style.display = 'block';
         }
       }
+    });
+  }
+
+  // Fetch Highlights
+  if (supabase) {
+    supabase.from('site_settings').select('value').eq('key', 'home_highlights').single().then(({ data }) => {
+      const highlights = data?.value;
+      const grid = document.getElementById('highlightsGrid');
+      if (!grid) return;
+      if (!highlights || highlights.length === 0) {
+        grid.innerHTML = '<p class="table-empty" style="grid-column:1/-1;text-align:center;">No highlights added yet.</p>';
+        return;
+      }
+      grid.innerHTML = highlights.map(h => {
+        const thumbContent = h.image
+          ? `<img src="${h.image}" alt="${h.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">${h.emoji || '⚽'}</div>`;
+        const cardTag = h.link ? `a href="${h.link}" target="_blank" rel="noopener"` : 'div';
+        const cardClose = h.link ? 'a' : 'div';
+        return `
+          <${cardTag} class="highlight-card" ${h.link ? '' : ''}>
+            <div class="highlight-thumb">
+              <div class="highlight-overlay"></div>
+              <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              ${thumbContent}
+            </div>
+            <div class="highlight-body">
+              <div class="highlight-comp">${h.comp}</div>
+              <div class="highlight-title">${h.title}</div>
+            </div>
+          </${cardClose}>`;
+      }).join('');
     });
   }
 
@@ -492,6 +453,33 @@ export function init() {
       }
     });
   }
+
+  // Fetch Standings
+  if (supabase) {
+    supabase.from('league_standings').select('*')
+      .order('points', { ascending: false })
+      .order('goals_for', { ascending: false })
+      .then(({ data, error }) => {
+        const tbody = document.getElementById('standingsBody');
+        if (!tbody) return;
+        if (error || !data || data.length === 0) return;
+        tbody.innerHTML = data.map((s, idx) => {
+          const gd = (s.goals_for || 0) - (s.goals_against || 0);
+          const formHTML = (s.form || []).map(r => `<div class="form-${r.toLowerCase()}">${r}</div>`).join('');
+          const badgeHTML = s.club_badge?.startsWith('http') 
+            ? `<img src="${s.club_badge}" style="width:20px;height:20px;object-fit:contain;"/>` 
+            : (s.club_badge || '⚽');
+          return `
+            <tr class="${s.is_highlighted ? 'highlight-row' : ''}">
+              <td><strong>${idx + 1}</strong></td>
+              <td><div class="team-cell"><div class="team-badge">${badgeHTML}</div>${s.is_highlighted ? `<strong>${s.club_name}</strong>` : s.club_name}</div></td>
+              <td>${s.played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td><td>${gd > 0 ? '+' : ''}${gd}</td>
+              <td><strong ${s.is_highlighted ? 'style="color:var(--red-light)"' : ''}>${s.points}</strong></td>
+              <td><div class="form-badges">${formHTML}</div></td>
+            </tr>`;
+        }).join('');
+      });
+  }
 }
 
 function footerHTML() {
@@ -503,11 +491,18 @@ function footerHTML() {
       <div class="footer-brand-name">NEWHOPE <span>NAIJA</span> FC</div>
       <p class="footer-brand-desc">${t('heroDesc1')}</p>
       <div class="footer-socials">
-        <a href="#" class="footer-social" title="Instagram">📷</a>
-        <a href="#" class="footer-social" title="Twitter/X">✖</a>
-        <a href="#" class="footer-social" title="Facebook">📘</a>
-        <a href="#" class="footer-social" title="YouTube">▶</a>
-        <a href="#" class="footer-social" title="WhatsApp">💬</a>
+        <a href="#" class="footer-social" title="Twitter/X">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" class="footer-social" title="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        </a>
+        <a href="#" class="footer-social" title="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2-1.74 2.89 2.89 0 0 1 2.89-2.89 2.89 2.89 0 0 1 1.5.42V7.71a6.08 6.08 0 0 0-4.39-.51 6.32 6.32 0 0 0-4.63 4.29 6.3 6.3 0 0 0 1 6.39 6.32 6.32 0 0 0 5.09 2.05 6.32 6.32 0 0 0 6.06-6.19V8.67a8.21 8.21 0 0 0 4.9 1.63V6.86a4.81 4.81 0 0 1-0-0.17z"/></svg>
+        </a>
+        <a href="#" class="footer-social" title="YouTube">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.95C18.88 4 12 4 12 4s-6.88 0-8.6.47a2.78 2.78 0 0 0-1.94 1.95C1 8.16 1 12 1 12s0 3.84.46 5.58a2.78 2.78 0 0 0 1.94 1.95C5.12 20 12 20 12 20s6.88 0 8.6-.47a2.78 2.78 0 0 0 1.94-1.95C23 15.84 23 12 23 12s0-3.84-.46-5.58zM9.54 15.18V8.82L15.46 12z"/></svg>
+        </a>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase.js';
+import { showToast } from '../lib/utils.js';
 
 export const title = 'Admin Dashboard';
 
@@ -19,14 +20,7 @@ function hideGlobalNav() {
   });
 }
 
-function showToast(msg, type = 'success') {
-  const t = document.createElement('div');
-  t.className = `admin-toast admin-toast--${type}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.classList.add('show'), 10);
-  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
-}
+
 
 function openModal(id) { document.getElementById(id)?.classList.add('active'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
@@ -46,6 +40,12 @@ export function render() {
           <a class="sidebar-link" data-panel="players"><span class="sidebar-icon">👥</span> Players</a>
           <a class="sidebar-link" data-panel="news"><span class="sidebar-icon">📰</span> News</a>
           <a class="sidebar-link" data-panel="fixtures"><span class="sidebar-icon">⚽</span> Fixtures</a>
+          <a class="sidebar-link" data-panel="finances"><span class="sidebar-icon">💰</span> Finances</a>
+          <a class="sidebar-link" data-panel="performance"><span class="sidebar-icon">📈</span> Performance</a>
+          <a class="sidebar-link" data-panel="medical"><span class="sidebar-icon">🏥</span> Medical</a>
+          <a class="sidebar-link" data-panel="standings"><span class="sidebar-icon">🏆</span> Standings</a>
+          <a class="sidebar-link" data-panel="messages"><span class="sidebar-icon">📩</span> Messages</a>
+          <a class="sidebar-link" data-panel="gallery"><span class="sidebar-icon">🖼️</span> Gallery</a>
           <a class="sidebar-link" data-panel="users"><span class="sidebar-icon">🔐</span> Manage Users</a>
           <a class="sidebar-link" data-panel="settings"><span class="sidebar-icon">⚙️</span> Settings</a>
           <button id="adminLogoutBtn" class="sidebar-link logout-btn"><span class="sidebar-icon">🚪</span> Logout</button>
@@ -270,6 +270,16 @@ export function render() {
           </div>
           <div class="form-row">
             <div class="form-group">
+              <label>Home Logo URL (Optional)</label>
+              <input type="url" id="fHomeLogo" class="form-input" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Away Logo URL (Optional)</label>
+              <input type="url" id="fAwayLogo" class="form-input" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label>Match Date & Time *</label>
               <input type="datetime-local" id="fMatchDate" class="form-input" required />
             </div>
@@ -306,6 +316,317 @@ export function render() {
           <div class="modal-actions">
             <button type="button" class="btn btn-outline" data-close="fixtureModal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Fixture</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- ── Add/Edit Highlight Modal ── -->
+    <div class="modal-overlay" id="highlightModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="highlightModalTitle">Add Highlight</h3>
+          <button class="modal-close" data-close="highlightModal">✕</button>
+        </div>
+        <form id="highlightForm" class="modal-form">
+          <input type="hidden" id="highlightFormIndex" value="-1" />
+          <div class="form-group">
+            <label>Competition / Match Label *</label>
+            <input type="text" id="hComp" class="form-input" required placeholder="e.g. Lagos Youth League · MD 14" />
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="hTitle" class="form-input" required placeholder="e.g. NEWHOPE NAIJA FC 3 – 1 SUNRISE FC · Full Match Highlights" />
+          </div>
+          <div class="form-group">
+            <label>Thumbnail Image URL (optional)</label>
+            <input type="url" id="hImage" class="form-input" placeholder="https://... (leave blank for default)" />
+          </div>
+          <div class="form-group">
+            <label>Video / Link URL (optional)</label>
+            <input type="url" id="hLink" class="form-input" placeholder="https://youtube.com/..." />
+          </div>
+          <div class="form-group">
+            <label>Emoji Icon (for placeholder)</label>
+            <input type="text" id="hEmoji" class="form-input" value="⚽" maxlength="4" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="highlightModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="highlightFormSubmitBtn">Save Highlight</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Process Finance Modal ── -->
+    <div class="modal-overlay" id="financeModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="financeModalTitle">Process Salary</h3>
+          <button class="modal-close" data-close="financeModal">✕</button>
+        </div>
+        <form id="financeForm" class="modal-form">
+          <input type="hidden" id="fncPlayerId" />
+          <div class="form-group">
+            <label>Player Name</label>
+            <input type="text" id="fncPlayerName" class="form-input" disabled style="background:var(--dark);" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Month (YYYY-MM) *</label>
+              <input type="month" id="fncMonth" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Status *</label>
+              <select id="fncStatus" class="form-input">
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Base Salary (₦) *</label>
+              <input type="number" id="fncBaseSalary" class="form-input calc-net" required />
+            </div>
+            <div class="form-group">
+              <label>Match Bonus (₦)</label>
+              <input type="number" id="fncBonus" class="form-input calc-net" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Deductions / Fines (₦)</label>
+              <input type="number" id="fncDeduction" class="form-input calc-net" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Net Pay (Calculated) (₦)</label>
+              <input type="text" id="fncNetPay" class="form-input" disabled style="background:var(--dark);" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Payment Date (Optional)</label>
+            <input type="date" id="fncPaymentDate" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" id="fncNotes" class="form-input" placeholder="e.g. Cleared via bank transfer" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="financeModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="financeSubmitBtn">Save Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Performance Modal ── -->
+    <div class="modal-overlay" id="performanceModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Log Match Performance</h3>
+          <button class="modal-close" data-close="performanceModal">✕</button>
+        </div>
+        <form id="performanceForm" class="modal-form">
+          <input type="hidden" id="perfPlayerId" />
+          <div class="form-group">
+            <label>Player Name</label>
+            <input type="text" id="perfPlayerName" class="form-input" disabled style="background:var(--dark);" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Match Date *</label>
+              <input type="date" id="perfDate" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Opponent</label>
+              <input type="text" id="perfOpponent" class="form-input" placeholder="e.g. Sunrise FC" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Minutes Played</label>
+              <input type="number" id="perfMinutes" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Match Rating (0-10)</label>
+              <input type="number" id="perfRating" class="form-input" step="0.1" min="0" max="10" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Goals</label>
+              <input type="number" id="perfGoals" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Assists</label>
+              <input type="number" id="perfAssists" class="form-input" value="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes / Feedback</label>
+            <textarea id="perfNotes" class="form-input" rows="3" placeholder="Performance details..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="performanceModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="perfSubmitBtn">Save Logs</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Medical Modal ── -->
+    <div class="modal-overlay" id="medicalModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Log Medical Update</h3>
+          <button class="modal-close" data-close="medicalModal">✕</button>
+        </div>
+        <form id="medicalForm" class="modal-form">
+          <input type="hidden" id="medPlayerId" />
+          <div class="form-group">
+            <label>Player Name</label>
+            <input type="text" id="medPlayerName" class="form-input" disabled style="background:var(--dark);" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Log Date *</label>
+              <input type="date" id="medDate" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Log Type *</label>
+              <select id="medType" class="form-input" required>
+                <option value="injury">Injury</option>
+                <option value="recovery">Recovery</option>
+                <option value="checkup">Checkup</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Player Status *</label>
+              <select id="medStatus" class="form-input" required>
+                <option value="fit">Fit / Available</option>
+                <option value="injured">Injured</option>
+                <option value="recovering">Recovering</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Expected Return</label>
+              <input type="date" id="medReturn" class="form-input" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description / Details</label>
+            <textarea id="medDesc" class="form-input" rows="3" placeholder="Symptoms, diagnosis, treatment..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="medicalModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="medSubmitBtn">Save Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Standings Modal ── -->
+    <div class="modal-overlay" id="standingModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="standingModalTitle">Edit Standing</h3>
+          <button class="modal-close" data-close="standingModal">✕</button>
+        </div>
+        <form id="standingForm" class="modal-form">
+          <input type="hidden" id="sId" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Club Name *</label>
+              <input type="text" id="sClubName" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Badge (Emoji or URL)</label>
+              <input type="text" id="sBadge" class="form-input" placeholder="e.g. 🔴 or URL" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Played</label>
+              <input type="number" id="sPlayed" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Won</label>
+              <input type="number" id="sWon" class="form-input" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Drawn</label>
+              <input type="number" id="sDrawn" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Lost</label>
+              <input type="number" id="sLost" class="form-input" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>GF (Goals For)</label>
+              <input type="number" id="sGF" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>GA (Goals Against)</label>
+              <input type="number" id="sGA" class="form-input" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Points</label>
+              <input type="number" id="sPoints" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Form (e.g. W,W,D,L,W)</label>
+              <input type="text" id="sForm" class="form-input" placeholder="Comma separated" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="sHighlighted" /> Highlight this team (NewHope Naija FC)
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="standingModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="standingSubmitBtn">Save Standing</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Add/Edit Gallery Modal ── -->
+    <div class="modal-overlay" id="galleryModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="galleryModalTitle">Add Gallery Photo</h3>
+          <button class="modal-close" data-close="galleryModal">✕</button>
+        </div>
+        <form id="galleryForm" class="modal-form">
+          <input type="hidden" id="galleryFormId" />
+          <div class="form-group">
+            <label>Image URL *</label>
+            <input type="url" id="gImageUrl" class="form-input" required placeholder="https://..." />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="gCategory" class="form-input">
+              <option value="Match Day">Match Day</option>
+              <option value="Training">Training</option>
+              <option value="Events">Events</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Caption / Title</label>
+            <input type="text" id="gCaption" class="form-input" placeholder="e.g. Training session at the stadium" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="galleryModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="gallerySubmitBtn">Save Photo</button>
           </div>
         </form>
       </div>
@@ -386,6 +707,7 @@ async function renderPlayersPanel() {
             <td><span class="badge ${healthClass}">${health}</span></td>
             <td class="table-actions">
               <button class="btn btn-sm btn-outline edit-player-btn" data-id="${p.id}">Edit</button>
+              <button class="btn btn-sm btn-danger delete-player-btn" data-id="${p.id}">Delete</button>
             </td>
           </tr>`;
       }).join('');
@@ -420,6 +742,10 @@ async function renderPlayersPanel() {
   document.querySelectorAll('.edit-player-btn').forEach(btn => {
     btn.addEventListener('click', () => loadPlayerForEdit(btn.dataset.id));
   });
+
+  document.querySelectorAll('.delete-player-btn').forEach(btn => {
+    btn.addEventListener('click', () => deletePlayer(btn.dataset.id));
+  });
 }
 
 async function loadPlayerForEdit(playerId) {
@@ -439,7 +765,8 @@ async function loadPlayerForEdit(playerId) {
   document.getElementById('pWeight').value = p?.weight_kg || '';
   document.getElementById('pCurrentLicense').value = p?.current_license_no || '';
   document.getElementById('pPreviousLicense').value = p?.previous_license_no || '';
-  document.getElementById('pPreviousClub').value = p?.previous_club || '';
+  const prevClubEl = document.getElementById('pPreviousClub');
+  if (prevClubEl) prevClubEl.value = p?.previous_club || '';
   document.getElementById('pDob').value = p?.date_of_birth || '';
   document.getElementById('pBio').value = p?.bio || '';
   document.getElementById('pPassportPreview').innerHTML = p?.passport_photo_url ? `<img src="${p.passport_photo_url}" style="width:100px; height:auto; border-radius:4px;" />` : 'No passport';
@@ -457,9 +784,10 @@ async function savePlayer(e) {
   btn.disabled = true;
 
   const id = document.getElementById('playerFormId').value;
+  const email = document.getElementById('pEmail').value;
+  // Note: email is NOT included in profileData because it lives in auth.users, not the profiles table
   const profileData = {
     full_name: document.getElementById('pFullName').value,
-    email: document.getElementById('pEmail').value,
     position: document.getElementById('pPosition').value,
     shirt_number: parseInt(document.getElementById('pShirtNumber').value) || null,
     nationality: document.getElementById('pNationality').value,
@@ -468,7 +796,7 @@ async function savePlayer(e) {
     weight_kg: parseFloat(document.getElementById('pWeight').value) || null,
     current_license_no: document.getElementById('pCurrentLicense').value,
     previous_license_no: document.getElementById('pPreviousLicense').value,
-    previous_club: document.getElementById('pPreviousClub').value,
+    previous_club: document.getElementById('pPreviousClub') ? document.getElementById('pPreviousClub').value : '',
     date_of_birth: document.getElementById('pDob').value || null,
     bio: document.getElementById('pBio').value,
   };
@@ -477,21 +805,29 @@ async function savePlayer(e) {
   try {
     const passportFile = document.getElementById('pPassportPhoto').files[0];
     if (passportFile) {
+      console.log('Uploading passport photo:', passportFile.name);
       const pName = `passports/${Date.now()}_${passportFile.name}`;
       const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, passportFile);
       if (!err && uploadData) {
         const { data: pubData } = supabase.storage.from('players').getPublicUrl(uploadData.path);
         profileData.passport_photo_url = pubData.publicUrl;
+        console.log('Passport uploaded:', profileData.passport_photo_url);
+      } else if (err) {
+        console.error('Passport upload error:', err);
       }
     }
 
     const photoFile = document.getElementById('pProfilePhoto').files[0];
     if (photoFile) {
+      console.log('Uploading profile photo:', photoFile.name);
       const pName = `photos/${Date.now()}_${photoFile.name}`;
       const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, photoFile);
       if (!err && uploadData) {
         const { data: pubData } = supabase.storage.from('players').getPublicUrl(uploadData.path);
         profileData.avatar_url = pubData.publicUrl;
+        console.log('Profile photo uploaded:', profileData.avatar_url);
+      } else if (err) {
+        console.error('Profile photo upload error:', err);
       }
     }
   } catch (e) { 
@@ -517,26 +853,49 @@ async function savePlayer(e) {
       showToast('Player updated successfully!');
     } else {
       // Invite new player via Edge Function
-      if (!profileData.email) throw new Error("An email address is required to invite a new player.");
+      if (!email) throw new Error("An email address is required to invite a new player.");
+      console.log('Invoking Edge Function "invite-user" for email:', email);
       showToast('Inviting player securely...', 'info');
       
-      const { data: invokeData, error: invokeError } = await supabase.functions.invoke('invite-user', {
-        body: { email: profileData.email }
-      });
+      let invokeData, invokeError;
+      try {
+        console.log('Waiting for Edge Function response (15s timeout)...');
+        // Simple timeout wrapper
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Invitation request timed out (15s).')), 15000));
+        const response = await Promise.race([
+          supabase.functions.invoke('invite-user', { body: { email: email } }),
+          timeoutPromise
+        ]);
+        
+        invokeData = response.data;
+        invokeError = response.error;
+      } catch (e) {
+        console.error('Invoke Exception:', e);
+        throw new Error('Failed to reach the invitation service. Is "invite-user" deployed? ' + e.message);
+      }
       
       if (invokeError) {
-        let msg = invokeError.message;
+        console.error('Edge Function Error Object:', invokeError);
+        let msg = invokeError.message || 'Unknown error';
         try {
+          // Attempt to parse JSON error response from Supabase Function
           if (invokeError.context && typeof invokeError.context.json === 'function') {
             const body = await invokeError.context.json();
             msg = body.error || msg;
           }
-        } catch (e) { /* ignore parse error */ }
-        throw new Error(msg);
+        } catch (e) { console.warn('Could not parse error body', e); }
+        throw new Error(`Invitation failed: ${msg}. Check Supabase logs for "invite-user" function.`);
       }
-      if (invokeData?.error) throw new Error(invokeData.error);
+
+      if (!invokeData || invokeData.error) {
+        console.error('Edge Function Data Error:', invokeData);
+        throw new Error(invokeData?.error || "Edge Function returned an empty response. Check your Supabase logs.");
+      }
       
-      const newUserId = invokeData.user.id;
+      const newUserId = invokeData.user?.id;
+      if (!newUserId) throw new Error("Could not retrieve new user ID from invitation response.");
+      
+      showToast('Creating player profile...', 'info');
       
       // The trigger created an empty profile. Now update it.
       const { error: profileErr } = await supabase.from('profiles').update(profileData).eq('id', newUserId);
@@ -560,6 +919,18 @@ async function savePlayer(e) {
   } finally {
     btn.textContent = 'Save Player';
     btn.disabled = false;
+  }
+}
+
+async function deletePlayer(id) {
+  if (!confirm('Are you sure you want to delete this player? This action cannot be undone.')) return;
+  try {
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Player deleted.', 'info');
+    renderPlayersPanel();
+  } catch (err) {
+    showToast('Error deleting player: ' + err.message, 'error');
   }
 }
 
@@ -727,6 +1098,7 @@ async function renderFixturesPanel() {
     document.getElementById('fixtureForm').reset();
     document.getElementById('fixtureFormId').value = '';
     document.getElementById('fHomeTeam').value = 'NewHope Naija FC';
+    document.getElementById('fHomeLogo').value = '/images/logo.png';
     openModal('fixtureModal');
   });
   document.querySelectorAll('.edit-fixture-btn').forEach(btn => {
@@ -744,6 +1116,8 @@ async function loadFixtureForEdit(id) {
   document.getElementById('fixtureFormId').value = id;
   document.getElementById('fHomeTeam').value = f?.home_team || 'NewHope Naija FC';
   document.getElementById('fAwayTeam').value = f?.away_team || '';
+  document.getElementById('fHomeLogo').value = f?.home_logo || '';
+  document.getElementById('fAwayLogo').value = f?.away_logo || '';
   document.getElementById('fMatchDate').value = f?.match_date ? f.match_date.slice(0, 16) : '';
   document.getElementById('fVenue').value = f?.venue || '';
   document.getElementById('fCompetition').value = f?.competition || '';
@@ -761,6 +1135,8 @@ async function saveFixture(e) {
   const payload = {
     home_team: document.getElementById('fHomeTeam').value,
     away_team: document.getElementById('fAwayTeam').value,
+    home_logo: document.getElementById('fHomeLogo').value || null,
+    away_logo: document.getElementById('fAwayLogo').value || null,
     match_date: document.getElementById('fMatchDate').value,
     venue: document.getElementById('fVenue').value,
     competition: document.getElementById('fCompetition').value,
@@ -834,18 +1210,51 @@ async function renderUsersPanel() {
   panel.innerHTML = `
     <div class="panel-toolbar">
       <h3>All Users</h3>
+      <div class="search-box">
+        <input type="text" id="userSearch" placeholder="Search user by name..." class="form-input" style="max-width:300px; margin-bottom:0;" />
+      </div>
     </div>
     <div class="dash-card">
-      <div class="user-admin-list">${rows}</div>
+      <div class="user-admin-list" id="usersListContent">${rows}</div>
     </div>
     <p class="panel-hint">💡 To invite a new player, go to your Supabase Dashboard → Authentication → Invite User.</p>`;
 
-  document.querySelectorAll('.make-admin-btn').forEach(btn => {
-    btn.addEventListener('click', () => changeUserRole(btn.dataset.id, 'admin'));
+  const userSearch = document.getElementById('userSearch');
+  userSearch.addEventListener('input', () => {
+    const term = userSearch.value.toLowerCase();
+    const filtered = users.filter(u => (u.full_name || '').toLowerCase().includes(term));
+    document.getElementById('usersListContent').innerHTML = filtered.length > 0
+      ? filtered.map(u => `
+          <div class="user-admin-row">
+            <div class="user-admin-info">
+              <div class="user-avatar-sm">${(u.full_name || 'U')[0].toUpperCase()}</div>
+              <div>
+                <strong>${u.full_name || 'Unnamed User'}</strong>
+                <span class="badge ${u.role === 'admin' ? 'badge--red' : 'badge--blue'}">${u.role}</span>
+              </div>
+            </div>
+            <div class="table-actions">
+              ${u.role === 'player'
+                ? `<button class="btn btn-sm btn-outline make-admin-btn" data-id="${u.id}">Make Admin</button>`
+                : `<button class="btn btn-sm btn-outline make-player-btn" data-id="${u.id}">Make Player</button>`
+              }
+            </div>
+          </div>`).join('')
+      : `<p class="table-empty">No matching users found.</p>`;
+    
+    attachUserListeners();
   });
-  document.querySelectorAll('.make-player-btn').forEach(btn => {
-    btn.addEventListener('click', () => changeUserRole(btn.dataset.id, 'player'));
-  });
+
+  const attachUserListeners = () => {
+    document.querySelectorAll('.make-admin-btn').forEach(btn => {
+      btn.addEventListener('click', () => changeUserRole(btn.dataset.id, 'admin'));
+    });
+    document.querySelectorAll('.make-player-btn').forEach(btn => {
+      btn.addEventListener('click', () => changeUserRole(btn.dataset.id, 'player'));
+    });
+  };
+
+  attachUserListeners();
 }
 
 async function changeUserRole(userId, newRole) {
@@ -892,9 +1301,79 @@ async function renderSettingsPanel() {
           <button type="submit" class="btn btn-primary" id="saveAdBtn">Save Banner Settings</button>
         </form>
       </div>
+    </div>
+
+    <div class="dash-card" style="margin-top:24px;">
+      <div class="settings-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="margin:0;">Homepage Highlights</h4>
+          <button class="btn btn-sm btn-primary" id="addHighlightBtn">+ Add Highlight</button>
+        </div>
+        <p class="settings-desc">Manage the match highlight cards shown on the home page.</p>
+        <div class="fixture-admin-list" id="settingsHighlightsList" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+    <div class="dash-card" style="margin-top:24px;">
+      <div class="settings-group">
+        <h4>Email Configuration Test (Resend)</h4>
+        <p class="settings-desc">Verify your Resend setup by sending a test email to your inbox.</p>
+        <p class="panel-hint" style="margin-top: 5px;">💡 Note: Ensure your <code>RESEND_API_KEY</code> is set in Supabase Secrets.</p>
+        
+        <form id="testEmailForm" class="modal-form" style="max-width: 600px; margin-top:20px;">
+          <div class="form-group">
+            <label>Recipient Email Address</label>
+            <input type="email" id="testEmailRecipient" class="form-input" placeholder="you@example.com" required />
+          </div>
+          <button type="submit" class="btn btn-primary" id="sendTestEmailBtn">Send Test Email</button>
+        </form>
+      </div>
     </div>`;
 
   document.getElementById('adBannerForm')?.addEventListener('submit', saveAdBanner);
+  document.getElementById('testEmailForm')?.addEventListener('submit', sendTestEmail);
+  
+  // Render highlights inside settings
+  let highlights = [];
+  if (supabase) {
+    const { data } = await supabase.from('site_settings').select('value').eq('key', 'home_highlights').single();
+    highlights = data?.value || [];
+  }
+
+  const hList = document.getElementById('settingsHighlightsList');
+  if (highlights.length === 0) {
+    hList.innerHTML = `<p class="table-empty">No highlights added yet.</p>`;
+  } else {
+    hList.innerHTML = highlights.map((h, i) => `
+      <div class="fixture-admin-row">
+        <div class="fixture-admin-match">
+          <span style="font-size:1.6rem;">${h.emoji || '⚽'}</span>
+          <div>
+            <strong>${h.title}</strong>
+            <div style="font-size:0.75rem;color:var(--gray);">${h.comp}</div>
+          </div>
+        </div>
+        <div class="table-actions">
+          <button class="btn btn-sm btn-outline edit-highlight-btn" data-index="${i}">Edit</button>
+          <button class="btn btn-sm btn-danger delete-highlight-btn" data-index="${i}">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('addHighlightBtn')?.addEventListener('click', () => {
+    document.getElementById('highlightModalTitle').textContent = 'Add Highlight';
+    document.getElementById('highlightForm').reset();
+    document.getElementById('highlightFormIndex').value = '-1';
+    document.getElementById('hEmoji').value = '⚽';
+    openModal('highlightModal');
+  });
+
+  document.querySelectorAll('.edit-highlight-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadHighlightForEdit(parseInt(btn.dataset.index), highlights));
+  });
+  document.querySelectorAll('.delete-highlight-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteHighlight(parseInt(btn.dataset.index), highlights));
+  });
 }
 
 async function saveAdBanner(e) {
@@ -993,12 +1472,839 @@ async function saveAdminProfile(e) {
   btn.disabled = false;
 }
 
+// ─── Highlights Panel ────────────────────────────────────────
+// ─── Highlights Panel Logic (now inside Settings) ─────────────
+function loadHighlightForEdit(index, highlights) {
+  const h = highlights[index];
+  if (!h) return;
+  document.getElementById('highlightModalTitle').textContent = 'Edit Highlight';
+  document.getElementById('highlightFormIndex').value = index;
+  document.getElementById('hComp').value = h.comp || '';
+  document.getElementById('hTitle').value = h.title || '';
+  document.getElementById('hImage').value = h.image || '';
+  document.getElementById('hLink').value = h.link || '';
+  document.getElementById('hEmoji').value = h.emoji || '⚽';
+  openModal('highlightModal');
+}
+
+async function saveHighlight(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('highlightFormSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    // Load current list
+    const { data: current } = await supabase.from('site_settings').select('value').eq('key', 'home_highlights').single();
+    const highlights = current?.value || [];
+
+    const index = parseInt(document.getElementById('highlightFormIndex').value);
+    const entry = {
+      comp: document.getElementById('hComp').value.trim(),
+      title: document.getElementById('hTitle').value.trim(),
+      image: document.getElementById('hImage').value.trim(),
+      link: document.getElementById('hLink').value.trim(),
+      emoji: document.getElementById('hEmoji').value.trim() || '⚽',
+    };
+
+    if (index >= 0) {
+      highlights[index] = entry;
+    } else {
+      highlights.push(entry);
+    }
+
+    const { error } = await supabase.from('site_settings').upsert({ key: 'home_highlights', value: highlights });
+    if (error) throw error;
+
+    showToast(index >= 0 ? 'Highlight updated!' : 'Highlight added!');
+    closeModal('highlightModal');
+    renderSettingsPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Highlight';
+    btn.disabled = false;
+  }
+}
+
+async function deleteHighlight(index, highlights) {
+  if (!confirm('Delete this highlight?')) return;
+  highlights.splice(index, 1);
+  const { error } = await supabase.from('site_settings').upsert({ key: 'home_highlights', value: highlights });
+  if (error) return showToast('Error: ' + error.message, 'error');
+  showToast('Highlight deleted.', 'info');
+  renderSettingsPanel();
+}
+
+// ─── Finances Panel ──────────────────────────────────────────
+async function renderFinancesPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading payroll data...</div>`;
+
+  let playerRows = '';
+  let historyRows = '';
+  if (supabase) {
+    const { data: players } = await supabase.from('profiles').select('id, full_name, role, player_stats(salary_amount)').eq('role', 'player').order('full_name');
+    
+    if (players && players.length > 0) {
+      playerRows = players.map(p => {
+        const stats = Array.isArray(p.player_stats) ? p.player_stats[0] : p.player_stats;
+        const salary = stats?.salary_amount || 0;
+        return `
+          <tr>
+            <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+            <td>₦${Number(salary).toLocaleString()}</td>
+            <td class="table-actions">
+              <button class="btn btn-sm btn-outline process-pay-btn" data-id="${p.id}" data-name="${p.full_name}" data-salary="${salary}">Process Pay</button>
+            </td>
+          </tr>`;
+      }).join('');
+    } else {
+      playerRows = `<tr><td colspan="3" class="table-empty">No players found.</td></tr>`;
+    }
+
+    const { data: history } = await supabase.from('salary_history').select('*, profiles(full_name)').order('created_at', { ascending: false }).limit(10);
+    
+    if (history && history.length > 0) {
+      historyRows = history.map(h => {
+        const pName = h.profiles?.full_name || 'Unknown';
+        const stClass = h.status === 'paid' ? 'badge--green' : 'badge--orange';
+        return `
+          <tr>
+            <td>${pName}</td>
+            <td>${h.month_year}</td>
+            <td>₦${Number(h.net_pay || 0).toLocaleString()}</td>
+            <td><span class="badge ${stClass}">${h.status}</span></td>
+            <td>${h.payment_date ? new Date(h.payment_date).toLocaleDateString() : '--'}</td>
+          </tr>`;
+      }).join('');
+    } else {
+      historyRows = `<tr><td colspan="5" class="table-empty">No salary records found yet.</td></tr>`;
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <h3>Finances & Payroll</h3>
+      <div class="search-box">
+        <input type="text" id="financeSearch" placeholder="Search player by name..." class="form-input" style="max-width:300px; margin-bottom:0;" />
+      </div>
+    </div>
+    <div class="dash-card" style="margin-bottom:24px;">
+      <h4 style="margin-bottom:12px;">Active Payroll</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player Name</th><th>Base Monthly Salary</th><th>Action</th></tr></thead>
+          <tbody id="financePlayerRows">${playerRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h4 style="margin-bottom:12px;">Recent Transactions</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player</th><th>Month</th><th>Net Pay</th><th>Status</th><th>Paid On</th></tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  const finSearch = document.getElementById('financeSearch');
+  finSearch.addEventListener('input', () => {
+    const term = finSearch.value.toLowerCase();
+    const rows = players.filter(p => (p.full_name || '').toLowerCase().includes(term));
+    document.getElementById('financePlayerRows').innerHTML = rows.length > 0
+      ? rows.map(p => {
+          const stats = Array.isArray(p.player_stats) ? p.player_stats[0] : p.player_stats;
+          const salary = stats?.salary_amount || 0;
+          return `
+            <tr>
+              <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+              <td>₦${Number(salary).toLocaleString()}</td>
+              <td class="table-actions">
+                <button class="btn btn-sm btn-outline process-pay-btn" data-id="${p.id}" data-name="${p.full_name}" data-salary="${salary}">Process Pay</button>
+              </td>
+            </tr>`;
+        }).join('')
+      : `<tr><td colspan="3" class="table-empty">No matching players found.</td></tr>`;
+    
+    // Re-attach listeners to new buttons
+    attachFinanceListeners();
+  });
+
+  const attachFinanceListeners = () => {
+    document.querySelectorAll('.process-pay-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('financeForm').reset();
+        document.getElementById('fncPlayerId').value = btn.dataset.id;
+        document.getElementById('fncPlayerName').value = btn.dataset.name;
+        document.getElementById('fncBaseSalary').value = btn.dataset.salary;
+        document.getElementById('fncMonth').value = new Date().toISOString().slice(0, 7);
+        
+        const calcNetPay = () => {
+          const base = parseFloat(document.getElementById('fncBaseSalary').value) || 0;
+          const bonus = parseFloat(document.getElementById('fncBonus').value) || 0;
+          const ded = parseFloat(document.getElementById('fncDeduction').value) || 0;
+          document.getElementById('fncNetPay').value = base + bonus - ded;
+        };
+        calcNetPay();
+        openModal('financeModal');
+      });
+    });
+  };
+
+  attachFinanceListeners();
+}
+
+async function saveFinancePayment(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('financeSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    player_id: document.getElementById('fncPlayerId').value,
+    month_year: document.getElementById('fncMonth').value,
+    base_salary: parseFloat(document.getElementById('fncBaseSalary').value) || 0,
+    bonus: parseFloat(document.getElementById('fncBonus').value) || 0,
+    deduction: parseFloat(document.getElementById('fncDeduction').value) || 0,
+    status: document.getElementById('fncStatus').value,
+    payment_date: document.getElementById('fncPaymentDate').value || null,
+    notes: document.getElementById('fncNotes').value
+  };
+
+  try {
+    const { error } = await supabase.from('salary_history').insert(payload);
+    if (error) throw error;
+    showToast('Salary record saved!');
+    closeModal('financeModal');
+    renderFinancesPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Record';
+    btn.disabled = false;
+  }
+}
+
+// ─── Performance Panel ──────────────────────────────────────────
+async function renderPerformancePanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading performance data...</div>`;
+
+  let playerRows = '';
+  let logsRows = '';
+  if (supabase) {
+    const { data: players } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    if (players && players.length > 0) {
+      playerRows = players.map(p => `
+        <tr>
+          <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline log-perf-btn" data-id="${p.id}" data-name="${p.full_name}">Log Match Performance</button>
+          </td>
+        </tr>`).join('');
+    } else {
+      playerRows = `<tr><td colspan="2" class="table-empty">No players found.</td></tr>`;
+    }
+
+    const { data: logs } = await supabase.from('performance_logs').select('*, profiles(full_name)').order('match_date', { ascending: false }).limit(10);
+    if (logs && logs.length > 0) {
+      logsRows = logs.map(l => `
+        <tr>
+          <td>${l.profiles?.full_name || 'Unknown'}</td>
+          <td>${l.match_date}</td>
+          <td>${l.opponent || '--'}</td>
+          <td>${l.goals || 0}G / ${l.assists || 0}A</td>
+          <td><span class="badge badge--green">${l.rating || '--'}</span></td>
+        </tr>`).join('');
+    } else {
+      logsRows = `<tr><td colspan="5" class="table-empty">No performance logs found yet.</td></tr>`;
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <h3>Performance Tracking</h3>
+      <div class="search-box">
+        <input type="text" id="perfSearch" placeholder="Search player by name..." class="form-input" style="max-width:300px; margin-bottom:0;" />
+      </div>
+    </div>
+    <div class="dash-card" style="margin-bottom:24px;">
+      <h4 style="margin-bottom:12px;">Process Performance</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player Name</th><th>Action</th></tr></thead>
+          <tbody id="perfPlayerRows">${playerRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h4 style="margin-bottom:12px;">Recent Match Logs</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player</th><th>Date</th><th>Opponent</th><th>Stats</th><th>Rating</th></tr></thead>
+          <tbody>${logsRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  const perfSearch = document.getElementById('perfSearch');
+  perfSearch.addEventListener('input', () => {
+    const term = perfSearch.value.toLowerCase();
+    const filtered = players.filter(p => (p.full_name || '').toLowerCase().includes(term));
+    document.getElementById('perfPlayerRows').innerHTML = filtered.length > 0
+      ? filtered.map(p => `
+          <tr>
+            <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+            <td class="table-actions">
+              <button class="btn btn-sm btn-outline log-perf-btn" data-id="${p.id}" data-name="${p.full_name}">Log Match Performance</button>
+            </td>
+          </tr>`).join('')
+      : `<tr><td colspan="2" class="table-empty">No matching players found.</td></tr>`;
+    
+    attachPerfListeners();
+  });
+
+  const attachPerfListeners = () => {
+    document.querySelectorAll('.log-perf-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('performanceForm').reset();
+        document.getElementById('perfPlayerId').value = btn.dataset.id;
+        document.getElementById('perfPlayerName').value = btn.dataset.name;
+        document.getElementById('perfDate').value = new Date().toISOString().split('T')[0];
+        openModal('performanceModal');
+      });
+    });
+  };
+
+  attachPerfListeners();
+}
+
+async function savePerformanceLog(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('perfSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    player_id: document.getElementById('perfPlayerId').value,
+    match_date: document.getElementById('perfDate').value,
+    opponent: document.getElementById('perfOpponent').value,
+    minutes_played: parseInt(document.getElementById('perfMinutes').value) || 0,
+    goals: parseInt(document.getElementById('perfGoals').value) || 0,
+    assists: parseInt(document.getElementById('perfAssists').value) || 0,
+    rating: parseFloat(document.getElementById('perfRating').value) || 0,
+    notes: document.getElementById('perfNotes').value
+  };
+
+  try {
+    const { error } = await supabase.from('performance_logs').insert(payload);
+    if (error) throw error;
+    showToast('Performance log saved!');
+    closeModal('performanceModal');
+    renderPerformancePanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Logs';
+    btn.disabled = false;
+  }
+}
+
+// ─── Medical Panel ──────────────────────────────────────────
+async function renderMedicalPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading medical data...</div>`;
+
+  let playerRows = '';
+  let logsRows = '';
+  if (supabase) {
+    const { data: players } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    if (players && players.length > 0) {
+      playerRows = players.map(p => `
+        <tr>
+          <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline log-med-btn" data-id="${p.id}" data-name="${p.full_name}">Log Medical Update</button>
+          </td>
+        </tr>`).join('');
+    } else {
+      playerRows = `<tr><td colspan="2" class="table-empty">No players found.</td></tr>`;
+    }
+
+    const { data: logs } = await supabase.from('medical_logs').select('*, profiles(full_name)').order('log_date', { ascending: false }).limit(10);
+    if (logs && logs.length > 0) {
+      logsRows = logs.map(l => {
+        const stClass = l.status === 'fit' ? 'badge--green' : (l.status === 'injured' ? 'badge--orange' : 'badge--blue');
+        return `
+          <tr>
+            <td>${l.profiles?.full_name || 'Unknown'}</td>
+            <td>${l.log_date}</td>
+            <td>${l.type.toUpperCase()}</td>
+            <td><span class="badge ${stClass}">${l.status.toUpperCase()}</span></td>
+            <td>${l.expected_return || '--'}</td>
+          </tr>`;
+      }).join('');
+    } else {
+      logsRows = `<tr><td colspan="5" class="table-empty">No medical records found yet.</td></tr>`;
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <h3>Medical & Health Logs</h3>
+      <div class="search-box">
+        <input type="text" id="medSearch" placeholder="Search player by name..." class="form-input" style="max-width:300px; margin-bottom:0;" />
+      </div>
+    </div>
+    <div class="dash-card" style="margin-bottom:24px;">
+      <h4 style="margin-bottom:12px;">Log Health Update</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player Name</th><th>Action</th></tr></thead>
+          <tbody id="medPlayerRows">${playerRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h4 style="margin-bottom:12px;">Recent Medical History</h4>
+      <div class="player-list-table">
+        <table>
+          <thead><tr><th>Player</th><th>Date</th><th>Type</th><th>Status</th><th>Return Date</th></tr></thead>
+          <tbody>${logsRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  const medSearch = document.getElementById('medSearch');
+  medSearch.addEventListener('input', () => {
+    const term = medSearch.value.toLowerCase();
+    const filtered = players.filter(p => (p.full_name || '').toLowerCase().includes(term));
+    document.getElementById('medPlayerRows').innerHTML = filtered.length > 0
+      ? filtered.map(p => `
+          <tr>
+            <td><strong>${p.full_name || 'Unnamed Player'}</strong></td>
+            <td class="table-actions">
+              <button class="btn btn-sm btn-outline log-med-btn" data-id="${p.id}" data-name="${p.full_name}">Log Medical Update</button>
+            </td>
+          </tr>`).join('')
+      : `<tr><td colspan="2" class="table-empty">No matching players found.</td></tr>`;
+    
+    attachMedListeners();
+  });
+
+  const attachMedListeners = () => {
+    document.querySelectorAll('.log-med-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('medicalForm').reset();
+        document.getElementById('medPlayerId').value = btn.dataset.id;
+        document.getElementById('medPlayerName').value = btn.dataset.name;
+        document.getElementById('medDate').value = new Date().toISOString().split('T')[0];
+        openModal('medicalModal');
+      });
+    });
+  };
+
+  attachMedListeners();
+}
+
+async function saveMedicalLog(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('medSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    player_id: document.getElementById('medPlayerId').value,
+    log_date: document.getElementById('medDate').value,
+    type: document.getElementById('medType').value,
+    status: document.getElementById('medStatus').value,
+    description: document.getElementById('medDesc').value,
+    expected_return: document.getElementById('medReturn').value || null
+  };
+
+  try {
+    const { error } = await supabase.from('medical_logs').insert(payload);
+    if (error) throw error;
+    
+    // Also update health_status in player_stats table automatically
+    await supabase.from('player_stats').update({ health_status: payload.status }).eq('player_id', payload.player_id);
+
+    showToast('Medical log and health status saved!');
+    closeModal('medicalModal');
+    renderMedicalPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Update';
+    btn.disabled = false;
+  }
+}
+
+// ─── Standings Panel ──────────────────────────────────────────
+async function renderStandingsPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading standings...</div>`;
+
+  let rows = '';
+  if (supabase) {
+    const { data: standings, error } = await supabase
+      .from('league_standings')
+      .select('*')
+      .order('points', { ascending: false })
+      .order('goals_for', { ascending: false });
+
+    if (error) {
+      rows = `<tr><td colspan="8" class="table-empty">Error: ${error.message}</td></tr>`;
+    } else if (!standings || standings.length === 0) {
+      rows = `<tr><td colspan="8" class="table-empty">No standings entries. Add the first team!</td></tr>`;
+    } else {
+      rows = standings.map((s, idx) => {
+        const gd = (s.goals_for || 0) - (s.goals_against || 0);
+        const gdStr = gd > 0 ? `+${gd}` : gd;
+        return `
+          <tr class="${s.is_highlighted ? 'highlight-row' : ''}">
+            <td><strong>${idx + 1}</strong></td>
+            <td>
+              <div class="team-cell">
+                <div class="team-badge">${s.club_badge?.startsWith('http') ? `<img src="${s.club_badge}" style="width:20px;height:20px;object-fit:contain;"/>` : (s.club_badge || '⚽')}</div>
+                <strong>${s.club_name}</strong>
+              </div>
+            </td>
+            <td>${s.played}</td>
+            <td>${s.won}/${s.drawn}/${s.lost}</td>
+            <td>${gdStr}</td>
+            <td><strong>${s.points}</strong></td>
+            <td class="table-actions">
+              <button class="btn btn-icon edit-standing-btn" data-id="${s.id}" title="Edit">✏️</button>
+              <button class="btn btn-icon delete-standing-btn" data-id="${s.id}" title="Delete">🗑️</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <div class="toolbar-left">
+        <h3>League Table Management</h3>
+        <p class="text-gray" style="font-size:0.85rem;">Manage teams and their current league stats.</p>
+      </div>
+      <button class="btn btn-primary" id="addStandingBtn">+ Add Team</button>
+    </div>
+    <div class="dash-card">
+      <div class="player-list-table">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Club</th>
+              <th>P</th>
+              <th>W/D/L</th>
+              <th>GD</th>
+              <th>Pts</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addStandingBtn')?.addEventListener('click', () => {
+    document.getElementById('standingForm').reset();
+    document.getElementById('sId').value = '';
+    document.getElementById('standingModalTitle').textContent = 'Add Team to Standings';
+    openModal('standingModal');
+  });
+
+  document.querySelectorAll('.edit-standing-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const { data: s } = await supabase.from('league_standings').select('*').eq('id', id).single();
+      if (s) {
+        document.getElementById('sId').value = s.id;
+        document.getElementById('sClubName').value = s.club_name;
+        document.getElementById('sBadge').value = s.club_badge || '';
+        document.getElementById('sPlayed').value = s.played;
+        document.getElementById('sWon').value = s.won;
+        document.getElementById('sDrawn').value = s.drawn;
+        document.getElementById('sLost').value = s.lost;
+        document.getElementById('sGF').value = s.goals_for;
+        document.getElementById('sGA').value = s.goals_against;
+        document.getElementById('sPoints').value = s.points;
+        document.getElementById('sForm').value = (s.form || []).join(',');
+        document.getElementById('sHighlighted').checked = !!s.is_highlighted;
+        document.getElementById('standingModalTitle').textContent = 'Edit League Standing';
+        openModal('standingModal');
+      }
+    });
+  });
+
+  document.querySelectorAll('.delete-standing-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remove this team from the standings?')) return;
+      const { error } = await supabase.from('league_standings').delete().eq('id', btn.dataset.id);
+      if (error) showToast(error.message, 'error');
+      else { showToast('Removed from standings.'); renderStandingsPanel(); }
+    });
+  });
+}
+
+async function saveStanding(e) {
+  e.preventDefault();
+  if (!supabase) return;
+
+  const btn = document.getElementById('standingSubmitBtn');
+  const id = document.getElementById('sId').value;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const formVal = document.getElementById('sForm').value;
+  const formArray = formVal ? formVal.split(',').map(s => s.trim().toUpperCase()).filter(s => ['W','D','L'].includes(s)) : [];
+
+  const payload = {
+    club_name: document.getElementById('sClubName').value,
+    club_badge: document.getElementById('sBadge').value,
+    played: parseInt(document.getElementById('sPlayed').value) || 0,
+    won: parseInt(document.getElementById('sWon').value) || 0,
+    drawn: parseInt(document.getElementById('sDrawn').value) || 0,
+    lost: parseInt(document.getElementById('sLost').value) || 0,
+    goals_for: parseInt(document.getElementById('sGF').value) || 0,
+    goals_against: parseInt(document.getElementById('sGA').value) || 0,
+    points: parseInt(document.getElementById('sPoints').value) || 0,
+    form: formArray,
+    is_highlighted: document.getElementById('sHighlighted').checked
+  };
+
+  try {
+    let err;
+    if (id) {
+      const { error } = await supabase.from('league_standings').update(payload).eq('id', id);
+      err = error;
+    } else {
+      const { error } = await supabase.from('league_standings').insert(payload);
+      err = error;
+    }
+
+    if (err) throw err;
+    showToast('Standing saved!');
+    closeModal('standingModal');
+    renderStandingsPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Standing';
+    btn.disabled = false;
+  }
+}
+
+// ─── Messages Panel ──────────────────────────────────────────
+async function renderMessagesPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading messages...</div>`;
+
+  let rows = '';
+  if (supabase) {
+    const { data: messages, error } = await supabase
+      .from('contact_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      rows = `<tr><td colspan="5" class="table-empty">Error: ${error.message}</td></tr>`;
+    } else if (!messages || messages.length === 0) {
+      rows = `<tr><td colspan="5" class="table-empty">No messages received yet.</td></tr>`;
+    } else {
+      rows = messages.map(m => {
+        const date = new Date(m.created_at).toLocaleString();
+        const unreadClass = !m.is_read ? 'style="font-weight:bold; background: rgba(204,0,0,0.05);"' : '';
+        const statusBadge = m.is_read ? '<span class="badge badge--grey">Read</span>' : '<span class="badge badge--red">New</span>';
+        
+        return `
+          <tr ${unreadClass}>
+            <td>
+              <div style="font-size:0.85rem; color:var(--gray);">${date}</div>
+              <div style="margin-top:4px;">${statusBadge}</div>
+            </td>
+            <td>
+              <div style="font-weight:600; color:var(--white);">${m.name}</div>
+              <div style="font-size:0.8rem; color:var(--gray);">${m.email}</div>
+            </td>
+            <td><div style="font-weight:600; color:var(--red-light);">${m.subject}</div></td>
+            <td style="max-width:300px;"><div style="font-size:0.9rem; line-height:1.4; color:var(--light-gray);">${m.message}</div></td>
+            <td class="table-actions">
+              ${!m.is_read ? `<button class="btn btn-icon mark-read-btn" data-id="${m.id}" title="Mark as Read">👁️</button>` : ''}
+              <button class="btn btn-icon delete-message-btn" data-id="${m.id}" title="Delete">🗑️</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <div class="toolbar-left">
+        <h3>Contact Form Messages</h3>
+        <p class="text-gray" style="font-size:0.85rem;">Inquiries submitted via the website contact form.</p>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="player-list-table">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:150px;">Date</th>
+              <th style="width:180px;">From</th>
+              <th style="width:150px;">Subject</th>
+              <th>Message</th>
+              <th style="width:120px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.mark-read-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const { error } = await supabase.from('contact_messages').update({ is_read: true }).eq('id', btn.dataset.id);
+      if (error) showToast(error.message, 'error');
+      else renderMessagesPanel();
+    });
+  });
+
+  document.querySelectorAll('.delete-message-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Permanently delete this message?')) return;
+      const { error } = await supabase.from('contact_messages').delete().eq('id', btn.dataset.id);
+      if (error) showToast(error.message, 'error');
+      else { showToast('Message deleted.'); renderMessagesPanel(); }
+    });
+  });
+}
+
+// ─── Gallery Panel ──────────────────────────────────────────
+async function renderGalleryPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading gallery...</div>`;
+
+  let rows = '';
+  if (supabase) {
+    const { data: photos, error } = await supabase
+      .from('gallery_photos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      rows = `<tr><td colspan="4" class="table-empty">Error: ${error.message}</td></tr>`;
+    } else if (!photos || photos.length === 0) {
+      rows = `<tr><td colspan="4" class="table-empty">No photos in the gallery yet.</td></tr>`;
+    } else {
+      rows = photos.map(p => `
+        <tr>
+          <td><img src="${p.image_url}" style="width:60px; height:60px; object-fit:cover; border-radius:4px;" /></td>
+          <td><span class="badge">${p.category}</span></td>
+          <td>${p.caption || '<span class="text-gray">No caption</span>'}</td>
+          <td class="table-actions">
+            <button class="btn btn-icon delete-photo-btn" data-id="${p.id}" title="Delete">🗑️</button>
+          </td>
+        </tr>`).join('');
+    }
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <div class="toolbar-left">
+        <h3>Photo Gallery Management</h3>
+        <p class="text-gray" style="font-size:0.85rem;">Upload and manage photos for the public gallery.</p>
+      </div>
+      <button class="btn btn-primary" id="addPhotoBtn">+ Add Photo</button>
+    </div>
+    <div class="dash-card">
+      <div class="player-list-table">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:80px;">Preview</th>
+              <th style="width:120px;">Category</th>
+              <th>Caption</th>
+              <th style="width:80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addPhotoBtn')?.addEventListener('click', () => {
+    document.getElementById('galleryForm').reset();
+    document.getElementById('galleryFormId').value = '';
+    document.getElementById('galleryModalTitle').textContent = 'Add Gallery Photo';
+    openModal('galleryModal');
+  });
+
+  document.querySelectorAll('.delete-photo-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Permanently delete this photo?')) return;
+      const { error } = await supabase.from('gallery_photos').delete().eq('id', btn.dataset.id);
+      if (error) showToast(error.message, 'error');
+      else { showToast('Photo deleted.'); renderGalleryPanel(); }
+    });
+  });
+}
+
+async function saveGalleryPhoto(e) {
+  e.preventDefault();
+  if (!supabase) return;
+  const btn = document.getElementById('gallerySubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    image_url: document.getElementById('gImageUrl').value,
+    category: document.getElementById('gCategory').value,
+    caption: document.getElementById('gCaption').value
+  };
+
+  try {
+    const { error } = await supabase.from('gallery_photos').insert(payload);
+    if (error) throw error;
+    showToast('Photo added to gallery!');
+    closeModal('galleryModal');
+    renderGalleryPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Photo';
+    btn.disabled = false;
+  }
+}
+
 // ─── Init ────────────────────────────────────────────────────
 const panelRenderers = {
   overview: renderOverviewPanel,
   players: renderPlayersPanel,
   news: renderNewsPanel,
   fixtures: renderFixturesPanel,
+  finances: renderFinancesPanel,
+  performance: renderPerformancePanel,
+  medical: renderMedicalPanel,
+  standings: renderStandingsPanel,
+  messages: renderMessagesPanel,
+  gallery: renderGalleryPanel,
   users: renderUsersPanel,
   settings: renderSettingsPanel,
 };
@@ -1007,9 +2313,56 @@ const panelTitles = {
   players: 'Manage Players',
   news: 'News Manager',
   fixtures: 'Fixtures & Results',
+  finances: 'Finances & Payroll',
+  performance: 'Performance Tracking',
+  medical: 'Medical Logs',
+  standings: 'League Standings',
+  messages: 'Contact Messages',
+  gallery: 'Photo Gallery',
   users: 'Manage Users',
   settings: 'Global Settings',
 };
+
+async function sendTestEmail(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('sendTestEmailBtn');
+  const recipient = document.getElementById('testEmailRecipient').value;
+  
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  try {
+    const { data: invokeData, error: invokeError } = await supabase.functions.invoke('send-email', {
+      body: { 
+        to: recipient, 
+        subject: 'NewHope Naija FC - Test Email',
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; color: #1a1a1a;">
+            <h2 style="color: #003366;">NewHope Naija FC</h2>
+            <p>This is a test email to verify your <strong>Resend</strong> integration.</p>
+            <p>If you received this, your setup is working correctly! ⚽</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 0.8rem; color: #666;">Official Admin Console - NewHope Naija FC</p>
+          </div>
+        `
+      }
+    });
+
+    if (invokeError) throw invokeError;
+    if (invokeData?.error) throw new Error(invokeData.error);
+
+    showToast('Test email sent successfully! Check your inbox.');
+    document.getElementById('testEmailForm').reset();
+  } catch (err) {
+    console.error('Email Test Error:', err);
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Send Test Email';
+    btn.disabled = false;
+  }
+}
 
 export function init() {
   hideGlobalNav();
@@ -1062,13 +2415,29 @@ export function init() {
   document.getElementById('playerForm')?.addEventListener('submit', savePlayer);
   document.getElementById('newsForm')?.addEventListener('submit', saveNews);
   document.getElementById('fixtureForm')?.addEventListener('submit', saveFixture);
+  document.getElementById('highlightForm')?.addEventListener('submit', saveHighlight);
+  document.getElementById('financeForm')?.addEventListener('submit', saveFinancePayment);
+  document.getElementById('performanceForm')?.addEventListener('submit', savePerformanceLog);
+  document.getElementById('medicalForm')?.addEventListener('submit', saveMedicalLog);
+  document.getElementById('standingForm')?.addEventListener('submit', saveStanding);
+  document.getElementById('galleryForm')?.addEventListener('submit', saveGalleryPhoto);
+
+  // Auto calc net pay
+  document.querySelectorAll('.calc-net').forEach(input => {
+    input.addEventListener('input', () => {
+      const base = parseFloat(document.getElementById('fncBaseSalary').value) || 0;
+      const bonus = parseFloat(document.getElementById('fncBonus').value) || 0;
+      const ded = parseFloat(document.getElementById('fncDeduction').value) || 0;
+      document.getElementById('fncNetPay').value = base + bonus - ded;
+    });
+  });
 
   // Logout
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
-    if (!confirm('Logout from Admin Panel?')) return;
     await supabase.auth.signOut();
     localStorage.removeItem('nhfc_user_role');
     localStorage.removeItem('nhfc_user_id');
+    showToast('Logged out successfully.');
     window.location.hash = '#login';
   });
 

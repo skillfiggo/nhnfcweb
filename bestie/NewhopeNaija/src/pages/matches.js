@@ -92,9 +92,17 @@ export function init() {
           <div class="match-card" ${f.status === 'scheduled' ? 'style="border-left-color:#00c853;"' : ''}>
             <div class="match-comp">🏆 ${f.competition || 'MATCH'} <span class="match-date">${dateStr}</span></div>
             <div class="match-teams">
-              <div class="match-team"><div class="match-team-name">${f.home_team}</div><div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div></div>
+              <div class="match-team">
+                ${f.home_logo ? `<img src="${f.home_logo}" class="team-logo-small" alt="${f.home_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
+                <div class="match-team-name">${f.home_team}</div>
+                <div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div>
+              </div>
               ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
-              <div class="match-team"><div class="match-team-name">${f.away_team}</div><div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div></div>
+              <div class="match-team">
+                ${f.away_logo ? `<img src="${f.away_logo}" class="team-logo-small" alt="${f.away_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
+                <div class="match-team-name">${f.away_team}</div>
+                <div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div>
+              </div>
             </div>
             <div class="match-result">${resultLabel} ${f.status === 'scheduled' ? ` · ${timeStr}` : ''}</div>
           </div>`;

@@ -1,5 +1,6 @@
 import { t } from '../i18n.js';
 import { supabase } from '../lib/supabase.js';
+import { showToast } from '../lib/utils.js';
 
 export const title = 'Login';
 
@@ -20,7 +21,7 @@ export function render() {
         <div class="login-left-content">
           <img src="/images/logo.png" alt="Logo" class="login-brand-logo" />
           <h2 class="login-welcome-title">Welcome Back to <span>NewHope Naija</span></h2>
-          <p class="login-welcome-desc">Sign in to access exclusive content, player stats, and manage your academy profile.</p>
+          <p class="login-welcome-desc">Sign in to access exclusive content, player stats, and manage your club profile.</p>
           
           <div class="login-slider-dots" id="loginSliderDots">
             <span class="login-dot active" data-index="0"></span>
@@ -134,7 +135,7 @@ export function init() {
       e.preventDefault();
       
       if (!supabase) {
-        alert('Supabase is not configured! Please add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the .env file and restart the dev server.');
+        showToast('Supabase is not configured! Please add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the .env file and restart the dev server.', 'error');
         return;
       }
 
@@ -181,12 +182,12 @@ export function init() {
         localStorage.setItem('nhfc_user_id', data.user.id);
 
         console.log('[Login] Final role cached:', role);
-        alert('Login successful! Welcome back.');
+        showToast('Login successful! Welcome back.');
         
         const target = role === 'admin' ? 'admin-dashboard' : 'player-dashboard';
         window.location.hash = '#' + target;
       } catch (error) {
-        alert('Login Failed: ' + error.message);
+        showToast('Login Failed: ' + error.message, 'error');
       } finally {
         btn.textContent = originalText;
         btn.style.opacity = '1';

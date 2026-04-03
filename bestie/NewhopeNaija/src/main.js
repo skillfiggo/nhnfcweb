@@ -23,6 +23,8 @@ import * as login from './pages/login.js';
 import * as adminDashboard from './pages/admin-dashboard.js';
 import * as playerDashboard from './pages/player-dashboard.js';
 import * as setupPassword from './pages/setup-password.js';
+import * as history from './pages/history.js';
+import * as tv from './pages/tv.js';
 import { supabase } from './lib/supabase.js';
 import { t } from './i18n.js';
 
@@ -58,6 +60,8 @@ register('login', login);
 register('admin-dashboard', adminDashboard);
 register('player-dashboard', playerDashboard);
 register('setup-password', setupPassword);
+register('history', history);
+register('newhope-tv', tv);
 
 // ===== Preloader =====
 window.addEventListener('load', () => {
@@ -145,19 +149,6 @@ const searchInput = document.getElementById('searchInput');
 const searchSuggestions = document.getElementById('searchSuggestions');
 const searchResultsList = document.getElementById('searchResultsList');
 
-// Mock Data for Search
-const searchData = [
-  { title: 'NewSeason Trials 2026/2027', desc: 'Registrations are now open for the 2026 intake.', icon: '⚽', url: '#news' },
-  { title: 'U-20 Squad Wins National Cup', desc: 'Celebrating another incredible season as our U-20 squad clinches the cup.', icon: '🏆', url: '#news' },
-  { title: 'Emeka Okafor Transfer', desc: 'Midfield maestro signs for Belgian Pro League side.', icon: '🌍', url: '#news' },
-  { title: 'Chidi Nwosu Earns Call-Up', desc: 'Striker named in Super Eagles U-20 squad.', icon: '🦅', url: '#news' },
-  { title: 'Lagos Youth League Standings', desc: 'NewHope Naija FC sits at the top of the table.', icon: '📊', url: '#matches-page' },
-  { title: 'Gallery - MD 14', desc: 'Photos from NewHope Naija FC vs Sunrise FC', icon: '📸', url: '#gallery' },
-  { title: 'First Team Squad', desc: 'Meet the players representing the badge.', icon: '👥', url: '#players' },
-  { title: 'Contact Club', desc: 'Get in touch for trials and sponsorship inquiries.', icon: '📞', url: '#contact' },
-  { title: 'Upcoming Fixture: Abuja United', desc: 'Mar 22, 2026 - 4:00 PM', icon: '⚡', url: '#matches-page' }
-];
-
 function openSearch() {
   if (!searchModal) return;
   searchModal.classList.add('active');
@@ -175,13 +166,20 @@ function closeSearch() {
   }
 }
 
-function renderSearchResults(results) {
+function renderSearchResults(results, isLoading = false) {
   if (!searchResultsList) return;
   searchResultsList.innerHTML = '';
+  
+  if (isLoading) {
+    searchResultsList.innerHTML = `<div style="color:var(--gray);text-align:center;padding:20px;">Searching...</div>`;
+    return;
+  }
+  
   if (results.length === 0) {
     searchResultsList.innerHTML = `<div style="color:var(--gray);text-align:center;padding:20px;">No results found for "${searchInput.value}"</div>`;
     return;
   }
+  
   results.forEach(item => {
     const a = document.createElement('a');
     a.href = item.url;
@@ -198,7 +196,80 @@ function renderSearchResults(results) {
   });
 }
 
-function handleSearchInput(query) {
+async function fetchSearchResults(query) {
+  renderSearchResults([], true);
+  
+  const searchPattern = `%${query}%`;
+  
+  try {
+    const [newsRes, playersRes, fixturesRes] = await Promise.all([
+      supabase.from('news')
+        .select('id, title, excerpt')
+        .ilike('title', searchPattern)
+        .eq('status', 'published')
+        .limit(3),
+      
+      supabase.from('profiles')
+        .select('id, full_name, position')
+        .eq('role', 'player')
+        .ilike('full_name', searchPattern)
+        .limit(3),
+        
+      supabase.from('fixtures')
+        .select('id, opponent, match_date')
+        .ilike('opponent', searchPattern)
+        .limit(3)
+    ]);
+    
+    let combinedResults = [];
+    
+    if (newsRes.data) {
+      newsRes.data.forEach(n => combinedResults.push({
+        title: n.title,
+        desc: n.excerpt || 'News Article',
+        icon: '📰',
+        url: `#news-article?id=${n.id}`
+      }));
+    }
+    
+    if (playersRes.data) {
+      playersRes.data.forEach(p => combinedResults.push({
+        title: p.full_name,
+        desc: p.position || 'Club Player',
+        icon: '👥',
+        url: `#players`
+      }));
+    }
+    
+    if (fixturesRes.data) {
+      fixturesRes.data.forEach(f => {
+        const dateStr = f.match_date ? new Date(f.match_date).toLocaleDateString() : 'Upcoming';
+        combinedResults.push({
+          title: `Match vs ${f.opponent}`,
+          desc: `Fixture Date: ${dateStr}`,
+          icon: '⚡',
+          url: `#matches-page`
+        });
+      });
+    }
+    
+    renderSearchResults(combinedResults);
+  } catch (err) {
+    console.error('Search error:', err);
+    searchResultsList.innerHTML = `<div style="color:var(--brand-red);text-align:center;padding:20px;">An error occurred while searching.</div>`;
+  }
+}
+
+// Debounce helper
+function debounce(func, timeout = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+const handleSearchInput = async (query) => {
   if (!searchSuggestions || !searchResultsList) return;
   if (!query.trim()) {
     searchSuggestions.style.display = 'block';
@@ -206,19 +277,16 @@ function handleSearchInput(query) {
   } else {
     searchSuggestions.style.display = 'none';
     searchResultsList.style.display = 'flex';
-    const lowerQuery = query.toLowerCase();
-    const filtered = searchData.filter(item => 
-      item.title.toLowerCase().includes(lowerQuery) || 
-      item.desc.toLowerCase().includes(lowerQuery)
-    );
-    renderSearchResults(filtered);
+    await fetchSearchResults(query);
   }
-}
+};
+
+const debouncedSearch = debounce((q) => handleSearchInput(q), 300);
 
 if (searchBtn) searchBtn.addEventListener('click', openSearch);
 if (searchCloseBtn) searchCloseBtn.addEventListener('click', closeSearch);
 if (searchInput) {
-  searchInput.addEventListener('input', (e) => handleSearchInput(e.target.value));
+  searchInput.addEventListener('input', (e) => debouncedSearch(e.target.value));
 }
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && searchModal && searchModal.classList.contains('active')) {

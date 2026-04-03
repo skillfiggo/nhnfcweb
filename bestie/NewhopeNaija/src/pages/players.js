@@ -3,11 +3,32 @@ import { supabase } from '../lib/supabase.js';
 export const title = 'Our Squad';
 
 let livePlayersData = [];
+let currentSquad = 'all';
 
 const posIcons = { 'gk': '🧤', 'def': '🛡️', 'mid': '⚙️', 'att': '⚡' };
 
+function calculateAge(dob) {
+  if (!dob || dob === '--') return null;
+  const birthDate = new Date(dob);
+  const diff = Date.now() - birthDate.getTime();
+  const ageDate = new Date(diff); 
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
 function generatePlayerCards(group) {
-  return livePlayersData.filter(p => p.pos === group).map(p => `
+  return livePlayersData.filter(p => {
+    if (p.pos !== group) return false;
+    
+    if (currentSquad === 'u17') {
+      const age = calculateAge(p.dob);
+      if (age === null || age > 17) return false;
+    } else if (currentSquad === 'u19') {
+      const age = calculateAge(p.dob);
+      if (age === null || age > 19) return false;
+    }
+    
+    return true;
+  }).map(p => `
     <div class="player-card" data-pos="${p.pos}">
       <div class="player-card-img" style="position:relative;">
         ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px;z-index:0;">` : `<div class="player-silhouette">${posIcons[p.pos] || '⚽'}</div>`}
@@ -36,8 +57,15 @@ export function render() {
 
 <section class="section">
   <div class="container">
-    <div class="players-tabs" id="playerTabs">
-      <button class="player-tab active" data-group="all">All Players</button>
+  
+    <div class="players-tabs" id="squadTabs">
+      <button class="player-tab active" data-squad="all">All Squads</button>
+      <button class="player-tab" data-squad="u19">Under-19</button>
+      <button class="player-tab" data-squad="u17">Under-17</button>
+    </div>
+
+    <div class="players-tabs" id="playerTabs" style="margin-top: 16px;">
+      <button class="player-tab active" data-group="all">All Positions</button>
       <button class="player-tab" data-group="gk">Goalkeepers</button>
       <button class="player-tab" data-group="def">Defenders</button>
       <button class="player-tab" data-group="mid">Midfielders</button>
@@ -125,13 +153,42 @@ export function render() {
 }
 
 export function init() {
-  const tabs = document.querySelectorAll('#playerTabs .player-tab');
+  const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  currentSquad = urlParams.get('squad') || 'all';
+
+  const squadTabs = document.querySelectorAll('#squadTabs .player-tab');
+  const posTabs = document.querySelectorAll('#playerTabs .player-tab');
   const groups = document.querySelectorAll('.player-group');
   const titles = document.querySelectorAll('.squad-section-title');
+  
+  // Set initial squad tab active state
+  squadTabs.forEach(t => {
+    t.classList.remove('active');
+    if (t.dataset.squad === currentSquad) t.classList.add('active');
+  });
 
-  tabs.forEach(tab => {
+  function refreshGrid() {
+    ['gk', 'def', 'mid', 'att'].forEach(g => {
+      const grid = document.querySelector(`.player-group[data-group="${g}"]`);
+      if (grid) {
+        const html = generatePlayerCards(g);
+        grid.innerHTML = html || '<p class="table-empty" style="grid-column:1/-1;">No players found in this category.</p>';
+      }
+    });
+  }
+
+  squadTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
+      squadTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentSquad = tab.dataset.squad;
+      refreshGrid();
+    });
+  });
+
+  posTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      posTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const group = tab.dataset.group;
       groups.forEach(g => {

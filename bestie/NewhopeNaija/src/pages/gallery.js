@@ -1,35 +1,36 @@
+import { supabase } from '../lib/supabase.js';
+import { t } from '../i18n.js';
+
 export const title = 'Gallery';
 
 export function render() {
   return `
 <div class="page-hero">
   <div class="container">
-    <h1 class="page-hero-title">Photo <span>Gallery</span></h1>
-    <div class="breadcrumb"><a href="#home">Home</a><span class="breadcrumb-sep">/</span><span>Gallery</span></div>
+    <h1 class="page-hero-title">${t('galleryPageTitle', 'Photo <span>Gallery</span>')}</h1>
+    <div class="breadcrumb"><a href="#home">${t('footerHome', 'Home')}</a><span class="breadcrumb-sep">/</span><span>${t('historyGallery', 'Gallery')}</span></div>
   </div>
 </div>
 
 <section class="section">
   <div class="container">
-    <div class="players-tabs" style="margin-bottom:40px;">
-      <button class="player-tab active">All Photos</button>
-      <button class="player-tab">Match Day</button>
-      <button class="player-tab">Training</button>
-      <button class="player-tab">Events</button>
+    <div class="section-header reveal">
+      <h2 class="section-title">${t('gallerySectionTitle', 'Club <span>Moments</span>')}</h2>
+      <p class="section-subtitle">${t('gallerySectionSub', 'A Glimpse into NewHope Naija FC')}</p>
     </div>
-    <div class="gallery-masonry" style="columns:4;">
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:240px;background:linear-gradient(135deg,#cc000044,#001f5b33);font-size:3rem;">⚽</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:180px;background:linear-gradient(135deg,#001f5b44,#cc000033);font-size:3rem;">🏆</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:300px;background:linear-gradient(135deg,#cc000033,#001f5b55);font-size:3rem;">🦅</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:200px;background:linear-gradient(135deg,#001f5b33,#cc000055);font-size:3rem;">👥</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:200px;background:linear-gradient(135deg,#cc000055,#001f5b22);font-size:3rem;">📸</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:260px;background:linear-gradient(135deg,#001f5b55,#cc000033);font-size:3rem;">🎯</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:180px;background:linear-gradient(135deg,#cc000022,#001f5b44);font-size:3rem;">💪</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:220px;background:linear-gradient(135deg,#001f5b22,#cc000044);font-size:3rem;">🌟</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:160px;background:linear-gradient(135deg,#cc000033,#001f5b44);font-size:3rem;">🎉</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:240px;background:linear-gradient(135deg,#001f5b44,#cc000022);font-size:3rem;">⚡</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:200px;background:linear-gradient(135deg,#cc000055,#001f5b33);font-size:3rem;">🏟️</div><div class="gallery-overlay">🔍</div></div>
-      <div class="gallery-item"><div class="gallery-placeholder" style="height:180px;background:linear-gradient(135deg,#001f5b33,#cc000055);font-size:3rem;">🥅</div><div class="gallery-overlay">🔍</div></div>
+
+    <div class="players-tabs" style="margin-bottom:40px;" id="galleryTabs">
+      <button class="player-tab active" data-category="all">${t('galleryTabAll', 'All Photos')}</button>
+      <button class="player-tab" data-category="Match Day">${t('galleryTabMatchDay', 'Match Day')}</button>
+      <button class="player-tab" data-category="Training">${t('galleryTabTraining', 'Training')}</button>
+      <button class="player-tab" data-category="Events">${t('galleryTabEvents', 'Events')}</button>
+    </div>
+
+    <div class="gallery-masonry" id="galleryGrid">
+      <div class="panel-loading" style="grid-column: 1/-1; text-align:center; padding: 100px 0;">
+        <div class="loader-spinner" style="margin: 0 auto 20px;"></div>
+        <p style="color: var(--gray); font-weight: 500;">${t('loading', 'Loading our story...')}</p>
+      </div>
     </div>
   </div>
 </section>
@@ -38,49 +39,153 @@ export function render() {
 <section class="section" style="background:var(--dark-2);">
   <div class="container">
     <div class="section-header reveal">
-      <h2 class="section-title">Video <span>Highlights</span></h2>
-      <p class="section-subtitle">Watch Our Best Moments</p>
+      <h2 class="section-title">${t('galleryVideoTitle', 'Video <span>Highlights</span>')}</h2>
+      <p class="section-subtitle">${t('highlightsSub', 'Watch Our Best Moments')}</p>
     </div>
-    <div class="highlights-grid">
-      <div class="highlight-card featured">
-        <div class="highlight-thumb"><div class="highlight-overlay"></div>
-          <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.12;">🏟️</div></div>
-        <div class="highlight-body"><div class="highlight-comp">Lagos Youth League · MD 14</div><div class="highlight-title">NEWHOPE NAIJA FC 3 – 1 SUNRISE FC · Full Match</div></div>
-      </div>
-      <div class="highlight-card">
-        <div class="highlight-thumb" style="height:180px;"><div class="highlight-overlay"></div>
-          <div class="highlight-play" style="width:44px;height:44px;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.12;">⚡</div></div>
-        <div class="highlight-body"><div class="highlight-comp">NNL Cup · MD 11</div><div class="highlight-title">NEWHOPE NAIJA FC 2 – 0 VICTORIA ISLAND FC</div></div>
-      </div>
-      <div class="highlight-card">
-        <div class="highlight-thumb" style="height:180px;"><div class="highlight-overlay"></div>
-          <div class="highlight-play" style="width:44px;height:44px;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.12;">🎯</div></div>
-        <div class="highlight-body"><div class="highlight-comp">Friendly</div><div class="highlight-title">NEWHOPE NAIJA FC 4 – 0 LAGOS STARS</div></div>
+    <div class="highlights-grid" id="galleryVideoGrid">
+      <div class="panel-loading" style="grid-column:1/-1;text-align:center;color:var(--gray); padding: 40px 0;">
+        <div class="loader-spinner" style="margin: 0 auto 15px; width:30px; height:30px;"></div>
+        ${t('loading', 'Loading highlights...')}
       </div>
     </div>
   </div>
 </section>
 
+<!-- Lightbox Modal -->
+<div class="modal-overlay" id="galleryLightbox">
+  <div class="lightbox-content">
+    <button class="modal-close" id="closeLightbox">✕</button>
+    <img id="lightboxImg" src="" alt="" />
+    <div id="lightboxCaption" class="lightbox-caption"></div>
+  </div>
+</div>
+
 <footer id="footer">
   <div class="container">
     <div class="footer-bottom">
       <span>NewHope Naija FC © 2026. All rights reserved.</span>
-      <div class="footer-bottom-links"><a href="#home">Home</a><a href="#contact">Contact</a></div>
+      <div class="footer-bottom-links"><a href="#home">${t('footerHome', 'Home')}</a><a href="#contact">${t('footerContact', 'Contact')}</a></div>
     </div>
   </div>
-</footer>`;
+</footer>
+`;
 }
 
-export function init() {
-  // Tab filter (visual)
-  const tabs = document.querySelectorAll('.players-tabs .player-tab');
+export async function init() {
+  window.scrollTo(0, 0);
+  let allPhotos = [];
+  let currentCategory = 'all';
+
+  async function fetchPhotos() {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('gallery_photos')
+      .select('*')
+      .order('created_at', { ascending: false });
+    return error ? [] : data;
+  }
+
+  function renderPhotos(photos) {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+
+    if (photos.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding: 80px 0; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--glass-border);">
+          <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.2;">🖼️</div>
+          <p style="color: var(--gray); font-size: 1.1rem;">${t('noPhotos', 'No photos found in this category yet.')}</p>
+          <p style="color: var(--gray-dark); font-size: 0.85rem; margin-top: 8px;">${t('noPhotosSub', 'Check back later for match updates!')}</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = photos.map(p => `
+      <div class="gallery-item reveal" data-img="${p.image_url}" data-caption="${p.caption || ''}">
+        <img src="${p.image_url}" alt="${p.caption || 'Gallery Photo'}" loading="lazy" />
+        <div class="gallery-overlay">
+          <span class="gallery-zoom-icon">🔍</span>
+          ${p.category ? `<span class="gallery-tag">${p.category}</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    // Add Lightbox Event Listeners
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const img = item.dataset.img;
+        const caption = item.dataset.caption;
+        const modal = document.getElementById('galleryLightbox');
+        const modalImg = document.getElementById('lightboxImg');
+        const modalCaption = document.getElementById('lightboxCaption');
+        
+        modalImg.src = img;
+        modalCaption.textContent = caption;
+        modal.classList.add('active');
+      });
+    });
+  }
+
+  // Close Lightbox
+  document.getElementById('closeLightbox')?.addEventListener('click', () => {
+    document.getElementById('galleryLightbox').classList.remove('active');
+  });
+  document.getElementById('galleryLightbox')?.addEventListener('click', (e) => {
+    if (e.target.id === 'galleryLightbox') {
+      document.getElementById('galleryLightbox').classList.remove('active');
+    }
+  });
+
+  // Initial load
+  allPhotos = await fetchPhotos();
+  renderPhotos(allPhotos);
+
+  // Tab filter
+  const tabs = document.querySelectorAll('#galleryTabs .player-tab');
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      currentCategory = tab.dataset.category;
+      
+      const filtered = currentCategory === 'all' 
+        ? allPhotos 
+        : allPhotos.filter(p => p.category === currentCategory);
+      
+      renderPhotos(filtered);
     });
   });
+
+  // Fetch Highlights
+  if (supabase) {
+    supabase.from('site_settings').select('value').eq('key', 'home_highlights').maybeSingle().then(({ data }) => {
+      const highlights = data?.value || [];
+      const grid = document.getElementById('galleryVideoGrid');
+      if (!grid) return;
+      
+      if (highlights.length === 0) {
+        grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--gray); padding: 40px 0;">${t('noHighlights', 'No video highlights available available.')}</p>`;
+        return;
+      }
+
+      grid.innerHTML = highlights.map(h => {
+        const thumbContent = h.image
+          ? `<img src="${h.image}" alt="${h.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">${h.emoji || '⚽'}</div>`;
+        const cardTag = h.link ? `a href="${h.link}" target="_blank" rel="noopener"` : 'div';
+        const cardClose = h.link ? 'a' : 'div';
+        return `
+          <${cardTag} class="highlight-card reveal">
+            <div class="highlight-thumb">
+              <div class="highlight-overlay"></div>
+              <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              ${thumbContent}
+            </div>
+            <div class="highlight-body">
+              <div class="highlight-comp">${h.comp}</div>
+              <div class="highlight-title">${h.title}</div>
+            </div>
+          </${cardClose}>`;
+      }).join('');
+    });
+  }
 }

@@ -14,13 +14,7 @@ export function render() {
 
 <section class="section">
   <div class="container">
-    <div class="players-tabs" style="margin-bottom:40px;">
-      <button class="player-tab active">All</button>
-      <button class="player-tab">Transfer News</button>
-      <button class="player-tab">National Team</button>
-      <button class="player-tab">League Update</button>
-      <button class="player-tab">Academy</button>
-    </div>
+
     <div class="news-grid" id="newsPageGrid">
       <div class="panel-loading" style="grid-column: 1/-1; text-align: center; color: var(--gray);">Loading news...</div>
     </div>
@@ -38,14 +32,7 @@ export function render() {
 }
 
 export function init() {
-  // News category tabs (visual only for now)
-  const tabs = document.querySelectorAll('.players-tabs .player-tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    });
-  });
+
 
   if (supabase) {
     supabase.from('news').select('*').eq('published', true).order('created_at', { ascending: false }).then(({ data, error }) => {
