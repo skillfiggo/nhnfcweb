@@ -62,7 +62,7 @@ export function render() {
                 <span class="checkmark"></span>
                 Remember me
               </label>
-              <a href="#" class="forgot-link">Forgot Password?</a>
+              <a href="#forgot-password" class="forgot-link">Forgot Password?</a>
             </div>
             
             <button type="submit" class="btn btn-primary login-submit-btn">

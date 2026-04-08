@@ -82,14 +82,25 @@ export async function init() {
       .from('gallery_photos')
       .select('*')
       .order('created_at', { ascending: false });
-    return error ? [] : data;
+    if (error) {
+      console.error('[Gallery] Supabase fetch error:', error);
+      const grid = document.getElementById('galleryGrid');
+      if (grid) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 80px 0; color: var(--gray);">
+          <p>Could not load photos. Check console for details.</p>
+          <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">${error.message}</p>
+        </div>`;
+      }
+      return [];
+    }
+    return data || [];
   }
 
   function renderPhotos(photos) {
     const grid = document.getElementById('galleryGrid');
     if (!grid) return;
 
-    if (photos.length === 0) {
+    if (!photos || photos.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1; text-align:center; padding: 80px 0; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--glass-border);">
           <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.2;">🖼️</div>
@@ -99,8 +110,9 @@ export async function init() {
       return;
     }
 
+
     grid.innerHTML = photos.map(p => `
-      <div class="gallery-item reveal" data-img="${p.image_url}" data-caption="${p.caption || ''}">
+      <div class="gallery-item" data-img="${p.image_url}" data-caption="${p.caption || ''}">
         <img src="${p.image_url}" alt="${p.caption || 'Gallery Photo'}" loading="lazy" />
         <div class="gallery-overlay">
           <span class="gallery-zoom-icon">🔍</span>

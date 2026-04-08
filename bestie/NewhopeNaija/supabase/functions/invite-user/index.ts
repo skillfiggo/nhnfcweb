@@ -30,9 +30,9 @@ serve(async (req) => {
     const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();
     if (profile?.role !== 'admin') throw new Error("Only admins can invite new users.");
 
-    // Get the email from the request body
-    const { email } = await req.json();
-    console.log(`Attempting to invite user: ${email}`);
+    // Get the email and player name from the request body
+    const { email, full_name } = await req.json();
+    console.log(`Attempting to invite user: ${email}, name: ${full_name}`);
     if (!email) throw new Error("Email is required");
 
     // Initialize Admin client
@@ -50,7 +50,10 @@ serve(async (req) => {
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
         email: email,
-        options: { redirectTo: `${req.headers.get('origin') || ''}/#setup-password` }
+        options: {
+          redirectTo: `${req.headers.get('origin') || ''}/#setup-password`,
+          data: { full_name: full_name || '', role: 'player' }
+        }
       });
 
       if (linkError) {
@@ -153,7 +156,9 @@ serve(async (req) => {
       console.log('Resend invitation sent successfully.');
     } else {
       console.log('No RESEND_API_KEY secret found. Falling back to default Supabase invitation (subject to rate limits).');
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: { full_name: full_name || '', role: 'player' }
+      });
       if (error) throw error;
       invitedUser = data.user;
     }

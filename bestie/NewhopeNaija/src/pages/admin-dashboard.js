@@ -338,8 +338,13 @@ export function render() {
             <input type="text" id="hTitle" class="form-input" required placeholder="e.g. NEWHOPE NAIJA FC 3 – 1 SUNRISE FC · Full Match Highlights" />
           </div>
           <div class="form-group">
-            <label>Thumbnail Image URL (optional)</label>
-            <input type="url" id="hImage" class="form-input" placeholder="https://... (leave blank for default)" />
+            <label>Thumbnail Image (Upload OR URL)</label>
+            <div id="hImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;">
+              <span style="color:var(--gray);">No image selected</span>
+            </div>
+            <input type="file" id="hImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
+            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
+            <input type="url" id="hImage" class="form-input" placeholder="https://... (URL fallback)" />
           </div>
           <div class="form-group">
             <label>Video / Link URL (optional)</label>
@@ -609,8 +614,10 @@ export function render() {
         <form id="galleryForm" class="modal-form">
           <input type="hidden" id="galleryFormId" />
           <div class="form-group">
-            <label>Image URL *</label>
-            <input type="url" id="gImageUrl" class="form-input" required placeholder="https://..." />
+            <label>Image (Upload file OR provide URL) *</label>
+            <input type="file" id="gImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
+            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
+            <input type="url" id="gImageUrl" class="form-input" placeholder="https://..." />
           </div>
           <div class="form-group">
             <label>Category</label>
@@ -863,7 +870,7 @@ async function savePlayer(e) {
         // Simple timeout wrapper
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Invitation request timed out (15s).')), 15000));
         const response = await Promise.race([
-          supabase.functions.invoke('invite-user', { body: { email: email } }),
+          supabase.functions.invoke('invite-user', { body: { email: email, full_name: profileData.full_name } }),
           timeoutPromise
         ]);
         
@@ -925,12 +932,21 @@ async function savePlayer(e) {
 async function deletePlayer(id) {
   if (!confirm('Are you sure you want to delete this player? This action cannot be undone.')) return;
   try {
+    // Delete child records first to avoid FK constraint violations
+    await supabase.from('player_stats').delete().eq('player_id', id);
+    await supabase.from('salary_history').delete().eq('player_id', id);
+    await supabase.from('performance_logs').delete().eq('player_id', id);
+    await supabase.from('medical_logs').delete().eq('player_id', id);
+
+    // Now delete the profile
     const { error } = await supabase.from('profiles').delete().eq('id', id);
     if (error) throw error;
+
     showToast('Player deleted.', 'info');
     renderPlayersPanel();
   } catch (err) {
     showToast('Error deleting player: ' + err.message, 'error');
+    console.error('[deletePlayer] Error:', err);
   }
 }
 
@@ -1374,6 +1390,19 @@ async function renderSettingsPanel() {
   document.querySelectorAll('.delete-highlight-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteHighlight(parseInt(btn.dataset.index), highlights));
   });
+
+  // Handle Highlight Image Preview
+  document.getElementById('hImageFile')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById('hImagePreview');
+    if (file && preview) {
+      const reader = new FileReader();
+      reader.onload = (re) => {
+        preview.innerHTML = `<img src="${re.target.result}" style="width:100%; height:100%; object-fit:contain;" />`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 }
 
 async function saveAdBanner(e) {
@@ -1484,6 +1513,12 @@ function loadHighlightForEdit(index, highlights) {
   document.getElementById('hImage').value = h.image || '';
   document.getElementById('hLink').value = h.link || '';
   document.getElementById('hEmoji').value = h.emoji || '⚽';
+  
+  const preview = document.getElementById('hImagePreview');
+  if (preview) {
+    preview.innerHTML = h.image ? `<img src="${h.image}" style="width:100%; height:100%; object-fit:contain;" />` : '<span style="color:var(--gray);">No image selected</span>';
+  }
+  
   openModal('highlightModal');
 }
 
@@ -1501,10 +1536,21 @@ async function saveHighlight(e) {
     const highlights = current?.value || [];
 
     const index = parseInt(document.getElementById('highlightFormIndex').value);
+    const file = document.getElementById('hImageFile').files[0];
+    let imageUrl = document.getElementById('hImage').value.trim();
+
+    if (file) {
+      const fName = `highlights/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage.from('gallery-images').upload(fName, file);
+      if (uploadErr) throw uploadErr;
+      const { data: pubData } = await supabase.storage.from('gallery-images').getPublicUrl(uploadData.path);
+      imageUrl = pubData.publicUrl;
+    }
+
     const entry = {
       comp: document.getElementById('hComp').value.trim(),
       title: document.getElementById('hTitle').value.trim(),
-      image: document.getElementById('hImage').value.trim(),
+      image: imageUrl,
       link: document.getElementById('hLink').value.trim(),
       emoji: document.getElementById('hEmoji').value.trim() || '⚽',
     };
@@ -2273,13 +2319,30 @@ async function saveGalleryPhoto(e) {
   btn.textContent = 'Saving...';
   btn.disabled = true;
 
-  const payload = {
-    image_url: document.getElementById('gImageUrl').value,
-    category: document.getElementById('gCategory').value,
-    caption: document.getElementById('gCaption').value
-  };
-
   try {
+    let finalImageUrl = document.getElementById('gImageUrl').value.trim();
+    const fileInput = document.getElementById('gImageFile');
+    
+    if (fileInput.files && fileInput.files[0]) {
+      const file = fileInput.files[0];
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage.from('gallery-images').upload(fileName, file);
+      if (uploadErr) throw uploadErr;
+      
+      const { data: pubData } = supabase.storage.from('gallery-images').getPublicUrl(uploadData.path);
+      finalImageUrl = pubData.publicUrl;
+    }
+
+    if (!finalImageUrl) {
+      throw new Error('Please upload an image or provide an image URL.');
+    }
+
+    const payload = {
+      image_url: finalImageUrl,
+      category: document.getElementById('gCategory').value,
+      caption: document.getElementById('gCaption').value
+    };
+
     const { error } = await supabase.from('gallery_photos').insert(payload);
     if (error) throw error;
     showToast('Photo added to gallery!');

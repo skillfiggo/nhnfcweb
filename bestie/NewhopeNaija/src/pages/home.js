@@ -212,6 +212,22 @@ export function render() {
 </div>
 
 ${footerHTML()}
+
+<!-- Video Lightbox Modal -->
+<div id="videoLightbox" class="video-lightbox">
+  <div class="video-lightbox-content">
+    <div id="closeVideoLightbox">✕</div>
+    <div class="video-player-container" id="videoPlayerContainer">
+      <!-- Dynamic Iframe or Video will be injected here -->
+    </div>
+    <div class="video-info-overlay">
+      <div class="video-title-wrap">
+        <h3 id="videoModalTitle">Video Highlight</h3>
+        <p id="videoModalComp" style="color:var(--red-light); font-size: 0.8rem; text-transform: uppercase; margin-top: 5px;"></p>
+      </div>
+    </div>
+  </div>
+</div>
 `;
 }
 
@@ -399,6 +415,13 @@ export function init() {
 
   // Fetch Highlights
   if (supabase) {
+    const isVideo = (url) => url && (url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg'));
+    const getYouTubeId = (url) => {
+      if (!url) return null;
+      const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
+    };
+
     supabase.from('site_settings').select('value').eq('key', 'home_highlights').single().then(({ data }) => {
       const highlights = data?.value;
       const grid = document.getElementById('highlightsGrid');
@@ -408,13 +431,21 @@ export function init() {
         return;
       }
       grid.innerHTML = highlights.map(h => {
-        const thumbContent = h.image
-          ? `<img src="${h.image}" alt="${h.title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />`
-          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">${h.emoji || '⚽'}</div>`;
-        const cardTag = h.link ? `a href="${h.link}" target="_blank" rel="noopener"` : 'div';
-        const cardClose = h.link ? 'a' : 'div';
+        let thumbContent = '';
+        const ytId = getYouTubeId(h.link);
+
+        if (h.image) {
+          thumbContent = `<img src="${h.image}" alt="${h.title}" />`;
+        } else if (isVideo(h.link)) {
+          thumbContent = `<video src="${h.link}" muted autoplay loop playsinline poster="/images/logo.png"></video>`;
+        } else if (ytId) {
+          thumbContent = `<img src="https://img.youtube.com/vi/${ytId}/maxresdefault.jpg" alt="${h.title}" onerror="this.src='https://img.youtube.com/vi/${ytId}/mqdefault.jpg'" />`;
+        } else {
+          thumbContent = `<div style="display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.15;">${h.emoji || '⚽'}</div>`;
+        }
+
         return `
-          <${cardTag} class="highlight-card" ${h.link ? '' : ''}>
+          <div class="highlight-card" data-video-link="${h.link || ''}" data-video-title="${h.title || ''}" data-video-comp="${h.comp || ''}">
             <div class="highlight-thumb">
               <div class="highlight-overlay"></div>
               <div class="highlight-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
@@ -424,10 +455,66 @@ export function init() {
               <div class="highlight-comp">${h.comp}</div>
               <div class="highlight-title">${h.title}</div>
             </div>
-          </${cardClose}>`;
+          </div>`;
       }).join('');
+
+      // Add Event Listeners for Video Lightbox
+      document.querySelectorAll('.highlight-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const link = card.dataset.videoLink;
+          const title = card.dataset.videoTitle;
+          const comp = card.dataset.videoComp;
+          if (!link) return;
+          
+          openVideoModal(link, title, comp);
+        });
+      });
     });
   }
+
+  function openVideoModal(link, title, comp) {
+    const modal = document.getElementById('videoLightbox');
+    const container = document.getElementById('videoPlayerContainer');
+    const titleEl = document.getElementById('videoModalTitle');
+    const compEl = document.getElementById('videoModalComp');
+    if (!modal || !container) return;
+
+    titleEl.textContent = title;
+    compEl.textContent = comp;
+    
+    const ytId = isYouTube(link);
+    if (ytId) {
+      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    } else {
+      container.innerHTML = `<video src="${link}" controls autoplay class="modal-video-main"></video>`;
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scroll
+  }
+
+  function isYouTube(url) {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  }
+
+  const closeBtn = document.getElementById('closeVideoLightbox');
+  const modal = document.getElementById('videoLightbox');
+  
+  const closeModal = () => {
+    if (modal) {
+      modal.classList.remove('active');
+      const container = document.getElementById('videoPlayerContainer');
+      if (container) container.innerHTML = ''; // Stop video
+      document.body.style.overflow = '';
+    }
+  };
+
+  closeBtn?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', (e) => {
+    if (e.target.id === 'videoLightbox') closeModal();
+  });
 
   // Fetch Ticker Data
   if (supabase) {

@@ -23,6 +23,8 @@ import * as login from './pages/login.js';
 import * as adminDashboard from './pages/admin-dashboard.js';
 import * as playerDashboard from './pages/player-dashboard.js';
 import * as setupPassword from './pages/setup-password.js';
+import * as forgotPassword from './pages/forgot-password.js';
+import * as resetPassword from './pages/reset-password.js';
 import * as history from './pages/history.js';
 import * as tv from './pages/tv.js';
 import { supabase } from './lib/supabase.js';
@@ -36,17 +38,14 @@ function updateStaticTranslations() {
 }
 
 // ===== Supabase Auth Listener =====
-// We listen for PASSWORD_RECOVERY (for resets) and handle invites via the URL hash below
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    window.location.hash = '#setup-password';
+    // Supabase has safely acquired the token from the URL and probably stripped the hash.
+    // Force the router to remain on the reset-password page!
+    window.location.hash = '#reset-password';
   }
 });
 
-// Extra check for Email Invites (sometimes event doesn't fire as expected on first load)
-if (window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')) {
-  window.location.hash = '#setup-password';
-}
 
 // ===== Register Routes =====
 register('home', home);
@@ -60,6 +59,8 @@ register('login', login);
 register('admin-dashboard', adminDashboard);
 register('player-dashboard', playerDashboard);
 register('setup-password', setupPassword);
+register('forgot-password', forgotPassword);
+register('reset-password', resetPassword);
 register('history', history);
 register('newhope-tv', tv);
 

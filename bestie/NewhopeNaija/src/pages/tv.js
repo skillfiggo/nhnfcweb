@@ -77,18 +77,34 @@ function getYouTubeId(url) {
   return match ? match[1] : null;
 }
 
+function isVideoUrl(url) {
+  return url && (url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg'));
+}
+
 function getThumbnail(videoData) {
   if (videoData.image) return videoData.image;
   const ytId = getYouTubeId(videoData.link);
-  if (ytId) return `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+  // Return high-res YouTube thumbnail if possible
+  if (ytId) return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
   return null;
 }
 
 function renderVideoCard(v, index) {
   const thumb = getThumbnail(v);
-  const thumbHtml = thumb
-    ? `<img src="${thumb}" class="tv-card-thumb-img" alt="${v.title}" loading="lazy" />`
-    : `<div class="tv-card-thumb-placeholder"><span style="font-size:2.5rem;">${v.emoji || '📺'}</span></div>`;
+  const ytId = getYouTubeId(v.link);
+  const isVideo = isVideoUrl(v.link);
+  
+  let thumbHtml = '';
+  if (v.image) {
+    thumbHtml = `<img src="${v.image}" class="tv-card-thumb-img" alt="${v.title}" loading="lazy" />`;
+  } else if (isVideo) {
+    thumbHtml = `<video src="${v.link}" class="tv-card-thumb-video" muted autoplay loop playsinline poster="/images/logo.png"></video>`;
+  } else if (thumb) {
+    // YouTube high-res with mqdefault fallback
+    thumbHtml = `<img src="${thumb}" class="tv-card-thumb-img" alt="${v.title}" loading="lazy" onerror="this.src='https://img.youtube.com/vi/${ytId}/mqdefault.jpg'" />`;
+  } else {
+    thumbHtml = `<div class="tv-card-thumb-placeholder"><span style="font-size:2.5rem;">${v.emoji || '📺'}</span></div>`;
+  }
 
   return `
     <div class="tv-video-card reveal" data-index="${index}">

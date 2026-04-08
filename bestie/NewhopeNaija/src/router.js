@@ -13,6 +13,13 @@ export function navigate(hash) {
 
 function getHash() {
   const hashString = window.location.hash.replace('#', '') || 'home';
+  // Check if it's a Supabase callback containing recovery or invite tokens
+  if (hashString.includes('type=recovery')) {
+    return 'reset-password';
+  }
+  if (hashString.includes('type=invite')) {
+    return 'setup-password';
+  }
   return hashString.split('?')[0];
 }
 
