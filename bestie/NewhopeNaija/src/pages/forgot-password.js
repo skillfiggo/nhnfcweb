@@ -86,10 +86,15 @@ export function init() {
       btn.style.pointerEvents = 'none';
       
       try {
+        // Always redirect to production domain so reset emails work regardless of
+        // whether the request was triggered from localhost or the live site.
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const redirectBase = isLocalhost
+          ? 'https://newhopenaijafc.com/'
+          : window.location.origin + '/';
+
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          // Pass the clean origin without a hash, so Supabase can safely append #access_token
-          // Our router already intercepts type=recovery and securely routes the user.
-          redirectTo: window.location.origin + '/'
+          redirectTo: redirectBase
         });
 
         if (error) throw error;

@@ -9,7 +9,7 @@ VALUES (
     true,
     false,
     5242880, -- 5MB limit
-    '{image/jpeg, image/png, image/webp}'
+    '{image/jpeg, image/png, image/webp, image/gif, image/avif}'
 )
 ON CONFLICT (id) DO NOTHING;
 

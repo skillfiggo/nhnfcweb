@@ -195,7 +195,7 @@ export function render() {
     <div class="highlights-grid" id="highlightsGrid">
       <div class="panel-loading" style="grid-column:1/-1;text-align:center;color:var(--gray);">Loading highlights...</div>
     </div>
-    <div style="text-align:center;margin-top:32px;"><a href="#gallery" class="btn btn-outline">${t('btnMoreHighlights')}</a></div>
+    <div style="text-align:center;margin-top:32px;"><a href="#tv" class="btn btn-outline">${t('btnMoreHighlights')}</a></div>
   </div>
 </section>
 
@@ -232,26 +232,35 @@ ${footerHTML()}
 }
 
 export function init() {
-  // Hero Slider
-  const slides = document.querySelectorAll('.hero-slide');
-  const dots = document.querySelectorAll('.hero-dot');
-  let currentSlide = 0;
-  let slideTimer;
+  // Hero Slider Initialization function
+  const setupSlider = () => {
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    if (slides.length === 0) return;
 
-  const goToSlide = (index) => {
-    slides[currentSlide].classList.remove('active');
-    dots[currentSlide].classList.remove('active');
-    currentSlide = index;
-    slides[currentSlide].classList.add('active');
-    dots[currentSlide].classList.add('active');
-  };
+    // Reset loop
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    slides[0].classList.add('active');
+    if (dots[0]) dots[0].classList.add('active');
 
-  const nextSlide = () => goToSlide((currentSlide + 1) % slides.length);
+    let currentSlide = 0;
+    
+    if (window.heroSlideTimer) clearInterval(window.heroSlideTimer);
 
-  const startTimer = () => { slideTimer = setInterval(nextSlide, 5000); };
-  const stopTimer = () => { clearInterval(slideTimer); };
+    const goToSlide = (index) => {
+      slides[currentSlide].classList.remove('active');
+      if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+      if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+    };
 
-  if (slides.length > 0) {
+    const nextSlide = () => goToSlide((currentSlide + 1) % slides.length);
+
+    const startTimer = () => { window.heroSlideTimer = setInterval(nextSlide, 5000); };
+    const stopTimer = () => { clearInterval(window.heroSlideTimer); };
+
     startTimer();
     dots.forEach((dot, index) => {
       dot.addEventListener('click', () => {
@@ -259,6 +268,52 @@ export function init() {
         goToSlide(index);
         startTimer();
       });
+    });
+  };
+
+  setupSlider(); // Initial statics
+
+  // Fetch Custom Slider Data
+  if (supabase) {
+    supabase.from('site_settings').select('value').eq('key', 'home_slider').single().then(({ data }) => {
+      const slidesData = data?.value;
+      if (slidesData && slidesData.length > 0) {
+        const slidesContainer = document.getElementById('heroSlides');
+        const dotsContainer = document.getElementById('heroPagination');
+        
+        if (slidesContainer && dotsContainer) {
+          slidesContainer.innerHTML = slidesData.map((s, i) => `
+            <div class="hero-slide ${i === 0 ? 'active' : ''}">
+              <div class="hero-bg"></div>
+              <div class="hero-bg-image" style="background-image: url('${s.image || ''}');"></div>
+              <div class="hero-gradient"></div>
+              <div class="hero-pattern"></div>
+              <div class="hero-grid-lines"></div>
+              <div class="container slide-content-wrap">
+                <div class="hero-content">
+                  <div class="hero-left">
+                    <div class="hero-tag"><span class="dot"></span>${s.tagline || ''}</div>
+                    <h1 class="hero-title">${s.title || ''}</h1>
+                  </div>
+                  ${i === 0 ? `
+                  <div class="hero-right">
+                    <div class="hero-badge-wrap">
+                      <div class="hero-badge-ring"></div>
+                      <div class="hero-badge-ring-2"></div>
+                      <div class="hero-badge-glow"></div>
+                      <img src="/images/logo.png" alt="NewHope Naija FC" class="hero-logo-img" />
+                    </div>
+                  </div>` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('');
+
+          dotsContainer.innerHTML = slidesData.map((_, i) => `<span class="hero-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`).join('');
+          
+          setupSlider(); // Reinitialize
+        }
+      }
     });
   }
 
@@ -377,16 +432,22 @@ export function init() {
           <div class="match-card" ${f.status === 'scheduled' ? 'style="border-left-color:#00c853;"' : ''}>
             <div class="match-comp">🏆 ${f.competition || 'MATCH'} <span class="match-date">${dateStr}</span></div>
             <div class="match-teams">
-              <div class="match-team">
-                ${f.home_logo ? `<img src="${f.home_logo}" class="team-logo-small" alt="${f.home_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
-                <div class="match-team-name">${f.home_team}</div>
-                <div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div>
+              <div class="match-team home-side">
+                <div class="match-team-info">
+                  <div class="match-team-name">${f.home_team}</div>
+                  <div class="match-team-tag">${f.home_team === 'NewHope Naija FC' ? t('matchHome') : ''}</div>
+                </div>
+                ${f.home_logo ? `<img src="${f.home_logo}" class="team-logo" alt="${f.home_team}">` : ''}
               </div>
-              ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
-              <div class="match-team">
-                ${f.away_logo ? `<img src="${f.away_logo}" class="team-logo-small" alt="${f.away_team}" style="width:40px;height:40px;object-fit:contain;margin-bottom:8px;">` : ''}
-                <div class="match-team-name">${f.away_team}</div>
-                <div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div>
+              <div class="match-scorebox">
+                ${f.status === 'scheduled' ? scoreUI : `<div class="match-score">${scoreUI}</div>`}
+              </div>
+              <div class="match-team away-side">
+                ${f.away_logo ? `<img src="${f.away_logo}" class="team-logo" alt="${f.away_team}">` : ''}
+                <div class="match-team-info">
+                  <div class="match-team-name">${f.away_team}</div>
+                  <div class="match-team-tag">${f.away_team === 'NewHope Naija FC' ? t('matchAway') : ''}</div>
+                </div>
               </div>
             </div>
             <div class="match-result">${resultLabel} ${f.status === 'scheduled' ? ` · ${timeStr}` : ''}</div>

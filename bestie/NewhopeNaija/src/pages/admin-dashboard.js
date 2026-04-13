@@ -223,8 +223,13 @@ export function render() {
             </div>
           </div>
           <div class="form-group">
-            <label>Image URL</label>
-            <input type="url" id="nImage" class="form-input" placeholder="https://..." />
+            <label>Cover Image (Upload OR URL)</label>
+            <div id="nImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;">
+              <span style="color:var(--gray);">No image selected</span>
+            </div>
+            <input type="file" id="nImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
+            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
+            <input type="url" id="nImage" class="form-input" placeholder="https://... (URL fallback)" />
           </div>
           <div class="form-group">
             <label>Body (English) *</label>
@@ -270,11 +275,17 @@ export function render() {
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Home Logo URL (Optional)</label>
+              <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span>Home Logo URL</span>
+                <button type="button" class="btn btn-sm btn-outline select-logo-btn" data-target="fHomeLogo" style="padding: 2px 8px; font-size: 0.7rem;">Browse Library</button>
+              </label>
               <input type="url" id="fHomeLogo" class="form-input" placeholder="https://..." />
             </div>
             <div class="form-group">
-              <label>Away Logo URL (Optional)</label>
+              <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span>Away Logo URL</span>
+                <button type="button" class="btn btn-sm btn-outline select-logo-btn" data-target="fAwayLogo" style="padding: 2px 8px; font-size: 0.7rem;">Browse Library</button>
+              </label>
               <input type="url" id="fAwayLogo" class="form-input" placeholder="https://..." />
             </div>
           </div>
@@ -318,6 +329,29 @@ export function render() {
             <button type="submit" class="btn btn-primary">Save Fixture</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- ── Logo Selector Modal ── -->
+    <div class="modal-overlay" id="logoSelectorModal" style="z-index: 10000;">
+      <div class="modal-box" style="max-width: 800px; max-height: 85vh;">
+        <div class="modal-header">
+          <h3>Select Club Logo</h3>
+          <button class="modal-close" data-close="logoSelectorModal">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; overflow-y: auto;">
+          <div class="upload-logo-area" style="margin-bottom: 20px; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; text-align: center; background: rgba(0,0,0,0.2);">
+            <p style="margin-bottom: 12px; font-size: 0.9rem; color: var(--gray);">Upload a new logo to the central library (Max 1MB)</p>
+            <input type="file" id="newLogoUpload" accept="image/*" style="display: none;" />
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('newLogoUpload').click()">Choose File</button>
+            <div id="newLogoName" style="margin-top: 10px; font-size: 0.85rem; color: var(--white); display:none;"></div>
+            <button type="button" id="uploadLogoBtn" class="btn btn-primary" style="margin-top: 10px; display:none;">Upload to Library</button>
+            <div id="logoUploadStatus" style="margin-top: 10px; font-size: 0.8rem;"></div>
+          </div>
+          <div id="logoGalleryGrid" class="logo-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;">
+            <div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">Loading library...</div>
+          </div>
+        </div>
       </div>
     </div>
     <!-- ── Add/Edit Highlight Modal ── -->
@@ -419,6 +453,57 @@ export function render() {
           <div class="modal-actions">
             <button type="button" class="btn btn-outline" data-close="financeModal">Cancel</button>
             <button type="submit" class="btn btn-primary" id="financeSubmitBtn">Save Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Process Finance Bulk Modal ── -->
+    <div class="modal-overlay" id="financeBulkModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="financeBulkModalTitle">Process All Salaries</h3>
+          <button class="modal-close" data-close="financeBulkModal">✕</button>
+        </div>
+        <form id="financeBulkForm" class="modal-form">
+          <div class="form-group" style="padding:10px; background:var(--dark); border-radius:8px; margin-bottom:15px;">
+            <p style="margin:0; font-size:0.9rem; color:var(--gray);">Process salary for all active players at once. Each player will receive their individually set base salary.</p>
+            <p style="margin:5px 0 0 0; font-weight:bold; color:var(--white);">Total Players: <span id="fncBulkCount">0</span></p>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Month (YYYY-MM) *</label>
+              <input type="month" id="fncBulkMonth" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Status *</label>
+              <select id="fncBulkStatus" class="form-input">
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Match Bonus (₦) (Applies to all)</label>
+              <input type="number" id="fncBulkBonus" class="form-input" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Deductions / Fines (₦) (Applies to all)</label>
+              <input type="number" id="fncBulkDeduction" class="form-input" value="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Payment Date (Optional)</label>
+            <input type="date" id="fncBulkPaymentDate" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" id="fncBulkNotes" class="form-input" placeholder="e.g. Cleared via bank transfer" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="financeBulkModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="financeBulkSubmitBtn">Process All</button>
           </div>
         </form>
       </div>
@@ -638,6 +723,40 @@ export function render() {
         </form>
       </div>
     </div>
+
+    <!-- ── Add/Edit Homepage Slide Modal ── -->
+    <div class="modal-overlay" id="sliderModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="sliderModalTitle">Add Slide</h3>
+          <button class="modal-close" data-close="sliderModal">✕</button>
+        </div>
+        <form id="sliderForm" class="modal-form">
+          <input type="hidden" id="sliderFormIndex" value="-1" />
+          <div class="form-group">
+            <label>Tagline (e.g. WELCOME TO) *</label>
+            <input type="text" id="slTagline" class="form-input" required placeholder="Short top label" />
+          </div>
+          <div class="form-group">
+            <label>Main Title (HTML allowed) *</label>
+            <input type="text" id="slTitle" class="form-input" required placeholder="e.g. NEWHOPE<br><span class='red'>NAIJA</span>" />
+          </div>
+          <div class="form-group">
+            <label>Background Image (Upload OR URL) *</label>
+            <div id="slImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center;">
+              <span style="color:var(--gray);">No image selected</span>
+            </div>
+            <input type="file" id="slImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
+            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
+            <input type="url" id="slImageUrl" class="form-input" placeholder="https://... (URL fallback)" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="sliderModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="sliderSubmitBtn">Save Slide</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
 }
 
@@ -808,7 +927,7 @@ async function savePlayer(e) {
     bio: document.getElementById('pBio').value,
   };
 
-  // Handle File Uploads (Optional, ignores errors if bucket doesn't exist yet)
+  // Handle File Uploads
   try {
     const passportFile = document.getElementById('pPassportPhoto').files[0];
     if (passportFile) {
@@ -821,6 +940,7 @@ async function savePlayer(e) {
         console.log('Passport uploaded:', profileData.passport_photo_url);
       } else if (err) {
         console.error('Passport upload error:', err);
+        showToast('Passport Upload Error: ' + err.message, 'error');
       }
     }
 
@@ -835,10 +955,12 @@ async function savePlayer(e) {
         console.log('Profile photo uploaded:', profileData.avatar_url);
       } else if (err) {
         console.error('Profile photo upload error:', err);
+        showToast('Profile Photo Upload Error: ' + err.message, 'error');
       }
     }
   } catch (e) { 
-    console.warn('Storage uploads failed (Bucket might not exist yet)', e);
+    console.error('Storage system error:', e);
+    showToast('Storage system error: ' + e.message, 'error');
   }
   const statsData = {
     health_status: document.getElementById('pHealth').value,
@@ -995,6 +1117,8 @@ async function renderNewsPanel() {
     document.getElementById('newsModalTitle').textContent = 'Post News';
     document.getElementById('newsForm').reset();
     document.getElementById('newsFormId').value = '';
+    const preview = document.getElementById('nImagePreview');
+    if (preview) preview.innerHTML = '<span style="color:var(--gray);">No image selected</span>';
     openModal('newsModal');
   });
 
@@ -1014,6 +1138,10 @@ async function loadNewsForEdit(id) {
   document.getElementById('nTitle').value = n?.title || '';
   document.getElementById('nTitleZh').value = n?.title_zh || '';
   document.getElementById('nImage').value = n?.image_url || '';
+  const preview = document.getElementById('nImagePreview');
+  if (preview) {
+    preview.innerHTML = n?.image_url ? `<img src="${n.image_url}" style="width:100%; height:100%; object-fit:contain;" />` : '<span style="color:var(--gray);">No image selected</span>';
+  }
   document.getElementById('nBody').value = n?.body || '';
   document.getElementById('nBodyZh').value = n?.body_zh || '';
   document.getElementById('nPublished').checked = n?.published || false;
@@ -1023,21 +1151,42 @@ async function loadNewsForEdit(id) {
 async function saveNews(e) {
   e.preventDefault();
   if (!supabase) return showToast('Supabase not configured', 'error');
-
-  const id = document.getElementById('newsFormId').value;
-  const { data: { user } } = await supabase.auth.getUser();
-  const payload = {
-    title: document.getElementById('nTitle').value,
-    title_zh: document.getElementById('nTitleZh').value,
-    image_url: document.getElementById('nImage').value,
-    body: document.getElementById('nBody').value,
-    body_zh: document.getElementById('nBodyZh').value,
-    published: document.getElementById('nPublished').checked,
-    author_id: user?.id,
-    updated_at: new Date().toISOString(),
-  };
+  
+  const btn = e.target.querySelector('button[type="submit"]');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
 
   try {
+    const id = document.getElementById('newsFormId').value;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    let imageUrl = document.getElementById('nImage').value;
+    const photoFile = document.getElementById('nImageFile')?.files[0];
+
+    if (photoFile) {
+      console.log('Uploading news photo:', photoFile.name);
+      const pName = `articles/${Date.now()}_${photoFile.name}`;
+      const { data: uploadData, error: err } = await supabase.storage.from('news-images').upload(pName, photoFile);
+      if (!err && uploadData) {
+        const { data: pubData } = supabase.storage.from('news-images').getPublicUrl(uploadData.path);
+        imageUrl = pubData.publicUrl;
+      } else if (err) {
+        console.error('News photo upload error:', err);
+        showToast('Image Upload Error: ' + err.message, 'error');
+        throw new Error("Failed to upload image.");
+      }
+    }
+
+    const payload = {
+      title: document.getElementById('nTitle').value,
+      title_zh: document.getElementById('nTitleZh').value,
+      image_url: imageUrl,
+      body: document.getElementById('nBody').value,
+      body_zh: document.getElementById('nBodyZh').value,
+      published: document.getElementById('nPublished').checked,
+      author_id: user?.id,
+      updated_at: new Date().toISOString(),
+    };
+
     if (id) {
       const { error } = await supabase.from('news').update(payload).eq('id', id);
       if (error) throw error;
@@ -1051,6 +1200,9 @@ async function saveNews(e) {
     renderNewsPanel();
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
+  } finally {
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) { btn.textContent = 'Save News'; btn.disabled = false; }
   }
 }
 
@@ -1192,11 +1344,13 @@ async function renderUsersPanel() {
   panel.innerHTML = `<div class="panel-loading">Loading users...</div>`;
 
   let rows = '';
+  let users = [];
   if (supabase) {
-    const { data: users, error } = await supabase
+    const { data: usersData, error } = await supabase
       .from('profiles')
       .select('id, full_name, role, created_at, is_active')
       .order('created_at', { ascending: true });
+    if (usersData) users = usersData;
 
     if (error) {
       rows = `<p class="table-empty">Error: ${error.message}</p>`;
@@ -1322,6 +1476,17 @@ async function renderSettingsPanel() {
     <div class="dash-card" style="margin-top:24px;">
       <div class="settings-group">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="margin:0;">Homepage Slider</h4>
+          <button class="btn btn-sm btn-primary" id="addSliderBtn">+ Add Slide</button>
+        </div>
+        <p class="settings-desc">Manage the main hero slider images and text shown on the home page.</p>
+        <div class="fixture-admin-list" id="settingsSliderList" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+    <div class="dash-card" style="margin-top:24px;">
+      <div class="settings-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <h4 style="margin:0;">Homepage Highlights</h4>
           <button class="btn btn-sm btn-primary" id="addHighlightBtn">+ Add Highlight</button>
         </div>
@@ -1403,6 +1568,69 @@ async function renderSettingsPanel() {
       reader.readAsDataURL(file);
     }
   });
+
+  // Render Slider List
+  let sliderData = [];
+  if (supabase) {
+    const { data } = await supabase.from('site_settings').select('value').eq('key', 'home_slider').single();
+    sliderData = data?.value || [];
+  }
+
+  const sList = document.getElementById('settingsSliderList');
+  if (sList) {
+    if (sliderData.length === 0) {
+      sList.innerHTML = `<p class="table-empty">No slides added yet. Using defaults.</p>`;
+    } else {
+      sList.innerHTML = sliderData.map((s, i) => `
+        <div class="fixture-admin-row" style="align-items: center;">
+          <div class="fixture-admin-match" style="gap: 15px;">
+            ${s.image ? `<div style="width: 80px; height: 50px; background-image: url('${s.image}'); background-size: cover; background-position: center; border-radius: 4px;"></div>` : '<div style="width: 80px; height: 50px; background: #333; display:flex; align-items:center; justify-content:center; border-radius:4px; color:#666;">No Img</div>'}
+            <div>
+              <strong>${s.tagline}</strong>
+              <div style="font-size:0.85rem;color:var(--gray);margin-top:2px;">${s.title}</div>
+            </div>
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-sm btn-outline edit-slider-btn" data-index="${i}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-slider-btn" data-index="${i}">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  document.getElementById('addSliderBtn')?.addEventListener('click', () => {
+    document.getElementById('sliderModalTitle').textContent = 'Add Slide';
+    document.getElementById('sliderForm').reset();
+    document.getElementById('sliderFormIndex').value = '-1';
+    document.getElementById('slImagePreview').innerHTML = '<span style="color:var(--gray);">No image selected</span>';
+    document.getElementById('slImagePreview').style.backgroundImage = 'none';
+    openModal('sliderModal');
+  });
+
+  document.querySelectorAll('.edit-slider-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadSliderForEdit(parseInt(btn.dataset.index), sliderData));
+  });
+  document.querySelectorAll('.delete-slider-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteSlider(parseInt(btn.dataset.index), sliderData));
+  });
+
+  // Handle Slider Image Preview
+  document.getElementById('slImageFile')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById('slImagePreview');
+    if (file && preview) {
+      const reader = new FileReader();
+      reader.onload = (re) => {
+        preview.style.backgroundImage = `url('${re.target.result}')`;
+        preview.innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Add event listener to submit
+  document.getElementById('sliderForm')?.removeEventListener('submit', saveSlider); // Prevent dupes if bound elsewhere
+  document.getElementById('sliderForm')?.addEventListener('submit', saveSlider);
 }
 
 async function saveAdBanner(e) {
@@ -1584,6 +1812,90 @@ async function deleteHighlight(index, highlights) {
   renderSettingsPanel();
 }
 
+// ─── Slider Settings Logic ────────────────────────────────────
+function loadSliderForEdit(index, sliderData) {
+  const s = sliderData[index];
+  if (!s) return;
+  document.getElementById('sliderModalTitle').textContent = 'Edit Slide';
+  document.getElementById('sliderFormIndex').value = index;
+  document.getElementById('slTagline').value = s.tagline || '';
+  document.getElementById('slTitle').value = s.title || '';
+  document.getElementById('slImageUrl').value = s.image || '';
+  
+  const preview = document.getElementById('slImagePreview');
+  if (preview) {
+    if (s.image) {
+      preview.style.backgroundImage = `url('${s.image}')`;
+      preview.innerHTML = '';
+    } else {
+      preview.style.backgroundImage = 'none';
+      preview.innerHTML = '<span style="color:var(--gray);">No image selected</span>';
+    }
+  }
+  
+  openModal('sliderModal');
+}
+
+async function saveSlider(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('sliderSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    const { data: current } = await supabase.from('site_settings').select('value').eq('key', 'home_slider').single();
+    const slides = current?.value || [];
+
+    const index = parseInt(document.getElementById('sliderFormIndex').value);
+    const file = document.getElementById('slImageFile').files[0];
+    let imageUrl = document.getElementById('slImageUrl').value.trim();
+
+    if (file) {
+      const fName = `slides/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage.from('slider-images').upload(fName, file);
+      if (uploadErr) throw uploadErr;
+      const { data: pubData } = await supabase.storage.from('slider-images').getPublicUrl(uploadData.path);
+      imageUrl = pubData.publicUrl;
+    }
+
+    const entry = {
+      tagline: document.getElementById('slTagline').value.trim(),
+      title: document.getElementById('slTitle').value.trim(),
+      image: imageUrl
+    };
+
+    if (index >= 0) {
+      slides[index] = entry;
+    } else {
+      slides.push(entry);
+    }
+
+    const { error } = await supabase.from('site_settings').upsert({ key: 'home_slider', value: slides });
+    if (error) throw error;
+
+    showToast(index >= 0 ? 'Slide updated!' : 'Slide added!');
+    closeModal('sliderModal');
+    renderSettingsPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Slide';
+    btn.disabled = false;
+  }
+}
+
+async function deleteSlider(index, slides) {
+  if (!confirm('Delete this slide?')) return;
+  slides.splice(index, 1);
+  const { error } = await supabase.from('site_settings').upsert({ key: 'home_slider', value: slides });
+  if (error) return showToast('Error: ' + error.message, 'error');
+  showToast('Slide deleted.', 'info');
+  renderSettingsPanel();
+}
+
+
 // ─── Finances Panel ──────────────────────────────────────────
 async function renderFinancesPanel() {
   const panel = document.getElementById('panelContent');
@@ -1591,8 +1903,10 @@ async function renderFinancesPanel() {
 
   let playerRows = '';
   let historyRows = '';
+  let players = [];
   if (supabase) {
-    const { data: players } = await supabase.from('profiles').select('id, full_name, role, player_stats(salary_amount)').eq('role', 'player').order('full_name');
+    const { data: playersData } = await supabase.from('profiles').select('id, full_name, role, player_stats(salary_amount)').eq('role', 'player').order('full_name');
+    if (playersData) players = playersData;
     
     if (players && players.length > 0) {
       playerRows = players.map(p => {
@@ -1634,8 +1948,9 @@ async function renderFinancesPanel() {
   panel.innerHTML = `
     <div class="panel-toolbar">
       <h3>Finances & Payroll</h3>
-      <div class="search-box">
+      <div class="search-box" style="display:flex; gap:8px; align-items:center;">
         <input type="text" id="financeSearch" placeholder="Search player by name..." class="form-input" style="max-width:300px; margin-bottom:0;" />
+        <button class="btn btn-primary" id="processAllPayBtn" style="white-space:nowrap;">Process All Pay</button>
       </div>
     </div>
     <div class="dash-card" style="margin-bottom:24px;">
@@ -1702,6 +2017,13 @@ async function renderFinancesPanel() {
   };
 
   attachFinanceListeners();
+
+  document.getElementById('processAllPayBtn')?.addEventListener('click', () => {
+    document.getElementById('financeBulkForm').reset();
+    document.getElementById('fncBulkCount').textContent = players.length;
+    document.getElementById('fncBulkMonth').value = new Date().toISOString().slice(0, 7);
+    openModal('financeBulkModal');
+  });
 }
 
 async function saveFinancePayment(e) {
@@ -1737,6 +2059,54 @@ async function saveFinancePayment(e) {
   }
 }
 
+async function saveFinanceBulkPayment(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('financeBulkSubmitBtn');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+
+  try {
+    const { data: players } = await supabase.from('profiles').select('id, player_stats(salary_amount)').eq('role', 'player');
+    if (!players || players.length === 0) throw new Error('No players found to process.');
+
+    const month = document.getElementById('fncBulkMonth').value;
+    const status = document.getElementById('fncBulkStatus').value;
+    const bonus = parseFloat(document.getElementById('fncBulkBonus').value) || 0;
+    const deduction = parseFloat(document.getElementById('fncBulkDeduction').value) || 0;
+    const paymentDate = document.getElementById('fncBulkPaymentDate').value || null;
+    const notes = document.getElementById('fncBulkNotes').value;
+
+    const payloads = players.map(p => {
+      const stats = Array.isArray(p.player_stats) ? p.player_stats[0] : p.player_stats;
+      const baseSalary = stats?.salary_amount || 0;
+      return {
+        player_id: p.id,
+        month_year: month,
+        base_salary: baseSalary,
+        bonus: bonus,
+        deduction: deduction,
+        status: status,
+        payment_date: paymentDate,
+        notes: notes
+      };
+    });
+
+    const { error } = await supabase.from('salary_history').insert(payloads);
+    if (error) throw error;
+    
+    showToast(`Successfully processed salary for ${payloads.length} players!`);
+    closeModal('financeBulkModal');
+    renderFinancesPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Process All';
+    btn.disabled = false;
+  }
+}
+
 // ─── Performance Panel ──────────────────────────────────────────
 async function renderPerformancePanel() {
   const panel = document.getElementById('panelContent');
@@ -1744,8 +2114,10 @@ async function renderPerformancePanel() {
 
   let playerRows = '';
   let logsRows = '';
+  let players = [];
   if (supabase) {
-    const { data: players } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    const { data: playersData } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    if (playersData) players = playersData;
     if (players && players.length > 0) {
       playerRows = players.map(p => `
         <tr>
@@ -1871,8 +2243,10 @@ async function renderMedicalPanel() {
 
   let playerRows = '';
   let logsRows = '';
+  let players = [];
   if (supabase) {
-    const { data: players } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    const { data: playersData } = await supabase.from('profiles').select('id, full_name, role').eq('role', 'player').order('full_name');
+    if (playersData) players = playersData;
     if (players && players.length > 0) {
       playerRows = players.map(p => `
         <tr>
@@ -2480,6 +2854,7 @@ export function init() {
   document.getElementById('fixtureForm')?.addEventListener('submit', saveFixture);
   document.getElementById('highlightForm')?.addEventListener('submit', saveHighlight);
   document.getElementById('financeForm')?.addEventListener('submit', saveFinancePayment);
+  document.getElementById('financeBulkForm')?.addEventListener('submit', saveFinanceBulkPayment);
   document.getElementById('performanceForm')?.addEventListener('submit', savePerformanceLog);
   document.getElementById('medicalForm')?.addEventListener('submit', saveMedicalLog);
   document.getElementById('standingForm')?.addEventListener('submit', saveStanding);
@@ -2493,6 +2868,128 @@ export function init() {
       const ded = parseFloat(document.getElementById('fncDeduction').value) || 0;
       document.getElementById('fncNetPay').value = base + bonus - ded;
     });
+  });
+
+  // Image Previews for File Inputs
+  const setupImagePreview = (inputId, previewId, imgStyles, emptyText) => {
+    document.getElementById(inputId)?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const preview = document.getElementById(previewId);
+      if (file && preview) {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          preview.innerHTML = `<img src="${re.target.result}" style="${imgStyles}" />`;
+        };
+        reader.readAsDataURL(file);
+      } else if (!file && preview) {
+        preview.innerHTML = emptyText;
+      }
+    });
+  };
+
+  setupImagePreview('pPassportPhoto', 'pPassportPreview', 'width:100px; height:auto; border-radius:4px; object-fit:cover;', 'No passport');
+  setupImagePreview('pProfilePhoto', 'pProfilePreview', 'width:100px; height:auto; border-radius:4px; object-fit:cover;', 'No profile photo');
+  setupImagePreview('adminEditAvatarFile', 'adminEditAvatarPreview', 'width:100%; height:100%; object-fit:contain;', 'No image selected');
+  setupImagePreview('nImageFile', 'nImagePreview', 'width:100%; height:100%; object-fit:contain;', '<span style="color:var(--gray);">No image selected</span>');
+
+  // ── Logo Selector Library Logic ──
+  let activeLogoTarget = null;
+  const logoModal = document.getElementById('logoSelectorModal');
+
+  document.querySelectorAll('.select-logo-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      activeLogoTarget = e.currentTarget.dataset.target;
+      openModal('logoSelectorModal');
+      loadLogosGallery();
+    });
+  });
+
+  async function loadLogosGallery() {
+    const grid = document.getElementById('logoGalleryGrid');
+    if (!supabase || !grid) return;
+    grid.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">Loading library...</div>';
+    
+    const { data, error } = await supabase.storage.from('club-logos').list('', { sortBy: { column: 'created_at', order: 'desc' } });
+    if (error) {
+      grid.innerHTML = `<div style="text-align:center; padding:20px; color:#ff5555; grid-column: 1/-1;">Error: ${error.message}</div>`;
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">No logos found. Upload your first club logo!</div>';
+      return;
+    }
+
+    const validFiles = data.filter(f => !f.name.startsWith('.'));
+    
+    let html = '';
+    for (const file of validFiles) {
+      const { data: pubData } = supabase.storage.from('club-logos').getPublicUrl(file.name);
+      html += `
+        <div class="logo-gallery-item" style="border: 2px solid transparent; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.03); padding: 10px;" 
+             onclick="selectLogoUrl('${pubData.publicUrl}')" 
+             onmouseover="this.style.borderColor='#cc0000'; this.style.transform='scale(1.05)';" 
+             onmouseout="this.style.borderColor='transparent'; this.style.transform='none';">
+          <img src="${pubData.publicUrl}" style="width: 100%; height: 80px; object-fit: contain;" title="${file.name}" />
+        </div>
+      `;
+    }
+    grid.innerHTML = html;
+  }
+
+  window.selectLogoUrl = function(url) {
+    if (activeLogoTarget) {
+      document.getElementById(activeLogoTarget).value = url;
+    }
+    closeModal('logoSelectorModal');
+  };
+
+  const uploadLogoInp = document.getElementById('newLogoUpload');
+  const uploadLogoName = document.getElementById('newLogoName');
+  const uploadLogoBtn = document.getElementById('uploadLogoBtn');
+  const uploadLogoStatus = document.getElementById('logoUploadStatus');
+
+  uploadLogoInp?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      uploadLogoName.textContent = file.name;
+      uploadLogoName.style.display = 'block';
+      uploadLogoBtn.style.display = 'inline-block';
+      uploadLogoStatus.textContent = '';
+    }
+  });
+
+  uploadLogoBtn?.addEventListener('click', async () => {
+    const file = uploadLogoInp.files[0];
+    if (!file) return;
+    
+    if (file.size > 1048576) {
+      uploadLogoStatus.style.color = '#ff5555';
+      uploadLogoStatus.textContent = 'File too large (Max 1MB).';
+      return;
+    }
+
+    uploadLogoBtn.textContent = 'Uploading...';
+    uploadLogoBtn.disabled = true;
+
+    const pName = `${Date.now()}_${file.name.replace(/\s+/g, '-')}`;
+    const { error: err } = await supabase.storage.from('club-logos').upload(pName, file);
+    
+    uploadLogoBtn.textContent = 'Upload to Library';
+    uploadLogoBtn.disabled = false;
+    
+    if (err) {
+      uploadLogoStatus.style.color = '#ff5555';
+      uploadLogoStatus.textContent = err.message;
+    } else {
+      uploadLogoStatus.style.color = '#00e676';
+      uploadLogoStatus.textContent = 'Uploaded successfully!';
+      uploadLogoInp.value = '';
+      uploadLogoName.style.display = 'none';
+      uploadLogoBtn.style.display = 'none';
+      setTimeout(() => { uploadLogoStatus.textContent = ''; }, 3000);
+      loadLogosGallery();
+    }
   });
 
   // Logout
