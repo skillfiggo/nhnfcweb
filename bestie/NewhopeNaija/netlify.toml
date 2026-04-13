@@ -2,7 +2,25 @@
   command = "npm run build"
   publish = "dist"
 
+# Redirect www to apex domain
+[[redirects]]
+  from = "https://www.newhopenaijafc.com/*"
+  to = "https://newhopenaijafc.com/:splat"
+  status = 301
+  force = true
+
+# SPA fallback: serve index.html for all routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Security & performance headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
