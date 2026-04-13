@@ -38,11 +38,25 @@ function updateStaticTranslations() {
 }
 
 // ===== Supabase Auth Listener =====
+// Capture the raw hash BEFORE Supabase strips it
+const _rawHashOnLoad = window.location.hash;
+
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    // Supabase has safely acquired the token from the URL and probably stripped the hash.
-    // Force the router to remain on the reset-password page!
+    // Force router to stay on reset-password page
     window.location.hash = '#reset-password';
+    return;
+  }
+
+  // When Supabase fires SIGNED_IN after consuming an invite link,
+  // the hash is already stripped — so we check against our saved copy.
+  if (event === 'SIGNED_IN' && session) {
+    const isInvite = _rawHashOnLoad.includes('type=invite') ||
+                     _rawHashOnLoad.includes('type=signup');
+    if (isInvite) {
+      window.location.hash = '#setup-password';
+      return;
+    }
   }
 });
 
