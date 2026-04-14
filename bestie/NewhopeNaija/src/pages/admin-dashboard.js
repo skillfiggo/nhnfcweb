@@ -42,6 +42,7 @@ export function render() {
           <a class="sidebar-link" data-panel="fixtures"><span class="sidebar-icon">⚽</span> Fixtures</a>
           <a class="sidebar-link" data-panel="finances"><span class="sidebar-icon">💰</span> Finances</a>
           <a class="sidebar-link" data-panel="performance"><span class="sidebar-icon">📈</span> Performance</a>
+          <a class="sidebar-link" data-panel="achievements"><span class="sidebar-icon">🏅</span> Achievements</a>
           <a class="sidebar-link" data-panel="medical"><span class="sidebar-icon">🏥</span> Medical</a>
           <a class="sidebar-link" data-panel="standings"><span class="sidebar-icon">🏆</span> Standings</a>
           <a class="sidebar-link" data-panel="messages"><span class="sidebar-icon">📩</span> Messages</a>
@@ -162,9 +163,15 @@ export function render() {
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label>Monthly Salary (₦)</label>
-            <input type="number" id="pSalary" class="form-input" placeholder="e.g. 150000" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Emergency Contact (Name & Phone)</label>
+              <input type="text" id="pEmergencyContact" class="form-input" placeholder="e.g. John Doe - 08012345678" />
+            </div>
+            <div class="form-group">
+              <label>Monthly Salary (₦)</label>
+              <input type="number" id="pSalary" class="form-input" placeholder="e.g. 150000" />
+            </div>
           </div>
           <div class="form-group">
             <label>Bio</label>
@@ -724,6 +731,42 @@ export function render() {
       </div>
     </div>
 
+    <!-- ── Add/Edit Achievement Modal ── -->
+    <div class="modal-overlay" id="achievementModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="achievementModalTitle">Add Player Achievement</h3>
+          <button class="modal-close" data-close="achievementModal">✕</button>
+        </div>
+        <form id="achievementForm" class="modal-form">
+          <input type="hidden" id="achFormId" />
+          <div class="form-group">
+            <label>Player *</label>
+            <select id="achPlayerId" class="form-input" required>
+              <option value="">Select a player...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Trophy Title (e.g. 2024 Golden Boot) *</label>
+            <input type="text" id="achTitle" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Trophy Image (Upload file OR provide URL) *</label>
+            <div id="achImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;">
+              <span style="color:var(--gray);">No image selected</span>
+            </div>
+            <input type="file" id="achImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
+            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
+            <input type="url" id="achImageUrl" class="form-input" placeholder="https://..." />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close="achievementModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="achievementSubmitBtn">Save Achievement</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- ── Add/Edit Homepage Slide Modal ── -->
     <div class="modal-overlay" id="sliderModal">
       <div class="modal-box">
@@ -803,20 +846,21 @@ async function renderPlayersPanel() {
   if (supabase) {
     const { data: players, error } = await supabase
       .from('profiles')
-      .select('id, full_name, position, shirt_number, is_active, player_stats(health_status, salary_amount)')
+      .select('id, full_name, email, position, shirt_number, is_active, player_stats(health_status, salary_amount)')
       .eq('role', 'player')
       .order('created_at', { ascending: true });
 
     if (error) {
-      rows = `<tr><td colspan="6" class="table-empty">Error: ${error.message}</td></tr>`;
+      rows = `<tr><td colspan="7" class="table-empty">Error: ${error.message}</td></tr>`;
     } else if (!players || players.length === 0) {
-      rows = `<tr><td colspan="6" class="table-empty">No players found. Add your first player!</td></tr>`;
+      rows = `<tr><td colspan="7" class="table-empty">No players found. Add your first player!</td></tr>`;
     } else {
       rows = players.map(p => {
         const stats = Array.isArray(p.player_stats) ? p.player_stats[0] : p.player_stats;
         const health = stats?.health_status || 'unknown';
         const healthClass = { fit: 'badge--green', injured: 'badge--red', recovering: 'badge--yellow', suspended: 'badge--orange', unknown: 'badge--grey' }[health] || 'badge--grey';
         const salary = stats?.salary_amount ? `₦${Number(stats.salary_amount).toLocaleString()}` : '--';
+        const hasEmail = !!p.email;
         return `
           <tr>
             <td><strong>#${p.shirt_number ?? '--'}</strong></td>
@@ -825,7 +869,10 @@ async function renderPlayersPanel() {
                 <div class="user-avatar-sm">
                   ${p.avatar_url ? `<img src="${p.avatar_url}" alt="" />` : (p.full_name?.charAt(0) || '?')}
                 </div>
-                <span>${p.full_name || 'Unknown'}</span>
+                <div>
+                  <span>${p.full_name || 'Unknown'}</span>
+                  ${hasEmail ? `<small style="display:block;color:var(--gray);font-size:0.75rem;">${p.email}</small>` : ''}
+                </div>
               </div>
             </td>
             <td>${p.position || '--'}</td>
@@ -833,6 +880,7 @@ async function renderPlayersPanel() {
             <td><span class="badge ${healthClass}">${health}</span></td>
             <td class="table-actions">
               <button class="btn btn-sm btn-outline edit-player-btn" data-id="${p.id}">Edit</button>
+              ${hasEmail ? `<button class="btn btn-sm btn-warning resend-invite-btn" data-id="${p.id}" data-email="${p.email}" data-name="${p.full_name || ''}" title="Resend invitation email">📧 Resend Invite</button>` : ''}
               <button class="btn btn-sm btn-danger delete-player-btn" data-id="${p.id}">Delete</button>
             </td>
           </tr>`;
@@ -851,7 +899,7 @@ async function renderPlayersPanel() {
       <div class="player-list-table">
         <table>
           <thead>
-            <tr><th>#</th><th>Name</th><th>Position</th><th>Salary</th><th>Health</th><th>Action</th></tr>
+            <tr><th>#</th><th>Name</th><th>Position</th><th>Salary</th><th>Health</th><th>Action</th><th></th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
@@ -871,6 +919,10 @@ async function renderPlayersPanel() {
 
   document.querySelectorAll('.delete-player-btn').forEach(btn => {
     btn.addEventListener('click', () => deletePlayer(btn.dataset.id));
+  });
+
+  document.querySelectorAll('.resend-invite-btn').forEach(btn => {
+    btn.addEventListener('click', () => resendPlayerInvite(btn.dataset.id, btn.dataset.email, btn.dataset.name, btn));
   });
 }
 
@@ -894,6 +946,7 @@ async function loadPlayerForEdit(playerId) {
   const prevClubEl = document.getElementById('pPreviousClub');
   if (prevClubEl) prevClubEl.value = p?.previous_club || '';
   document.getElementById('pDob').value = p?.date_of_birth || '';
+  document.getElementById('pEmergencyContact').value = p?.emergency_contact || '';
   document.getElementById('pBio').value = p?.bio || '';
   document.getElementById('pPassportPreview').innerHTML = p?.passport_photo_url ? `<img src="${p.passport_photo_url}" style="width:100px; height:auto; border-radius:4px;" />` : 'No passport';
   document.getElementById('pProfilePreview').innerHTML = p?.avatar_url ? `<img src="${p.avatar_url}" style="width:100px; height:auto; border-radius:4px;" />` : 'No profile photo';
@@ -911,8 +964,9 @@ async function savePlayer(e) {
 
   const id = document.getElementById('playerFormId').value;
   const email = document.getElementById('pEmail').value;
-  // Note: email is NOT included in profileData because it lives in auth.users, not the profiles table
+  
   const profileData = {
+    email: email || null,
     full_name: document.getElementById('pFullName').value,
     position: document.getElementById('pPosition').value,
     shirt_number: parseInt(document.getElementById('pShirtNumber').value) || null,
@@ -924,6 +978,7 @@ async function savePlayer(e) {
     previous_license_no: document.getElementById('pPreviousLicense').value,
     previous_club: document.getElementById('pPreviousClub') ? document.getElementById('pPreviousClub').value : '',
     date_of_birth: document.getElementById('pDob').value || null,
+    emergency_contact: document.getElementById('pEmergencyContact').value,
     bio: document.getElementById('pBio').value,
   };
 
@@ -1026,8 +1081,8 @@ async function savePlayer(e) {
       
       showToast('Creating player profile...', 'info');
       
-      // The trigger created an empty profile. Now update it.
-      const { error: profileErr } = await supabase.from('profiles').update(profileData).eq('id', newUserId);
+      // Upsert the full profile — include role:'player' to satisfy the not-null constraint on the role column.
+      const { error: profileErr } = await supabase.from('profiles').upsert({ id: newUserId, role: 'player', ...profileData });
       if (profileErr) throw profileErr;
       
       const { data: existingStat } = await supabase.from('player_stats').select('id').eq('player_id', newUserId).single();
@@ -1047,6 +1102,49 @@ async function savePlayer(e) {
     showToast('Error: ' + err.message, 'error');
   } finally {
     btn.textContent = 'Save Player';
+    btn.disabled = false;
+  }
+}
+
+async function resendPlayerInvite(playerId, email, fullName, btn) {
+  if (!email) return showToast('No email on record for this player.', 'error');
+  if (!confirm(`Resend invitation email to ${email}?`)) return;
+
+  const originalText = btn.textContent;
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  try {
+    showToast('Sending invitation...', 'info');
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out (15s).')), 15000)
+    );
+    const response = await Promise.race([
+      supabase.functions.invoke('invite-user', { body: { email, full_name: fullName } }),
+      timeoutPromise
+    ]);
+
+    if (response.error) {
+      let msg = response.error.message || 'Unknown error';
+      try {
+        if (response.error.context && typeof response.error.context.json === 'function') {
+          const body = await response.error.context.json();
+          msg = body.error || msg;
+        }
+      } catch (_) {}
+      throw new Error(msg);
+    }
+
+    if (!response.data || response.data.error) {
+      throw new Error(response.data?.error || 'Edge Function returned empty response.');
+    }
+
+    showToast(`✅ Invitation resent to ${email}!`);
+  } catch (err) {
+    showToast('Failed to resend invite: ' + err.message, 'error');
+    console.error('[resendPlayerInvite]', err);
+  } finally {
+    btn.textContent = originalText;
     btn.disabled = false;
   }
 }
@@ -2730,6 +2828,122 @@ async function saveGalleryPhoto(e) {
   }
 }
 
+// ─── Achievements Panel ──────────────────────────────────────
+async function renderAchievementsPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading achievements...</div>`;
+  if (!supabase) return panel.innerHTML = `<div class="panel-loading">Supabase not configured</div>`;
+
+  const { data: achs, error } = await supabase.from('player_achievements')
+    .select('*, profiles(full_name)')
+    .order('created_at', { ascending: false });
+
+  let rows = '';
+  if (error) {
+    rows = `<tr><td colspan="5" class="table-empty">Error: ${error.message}</td></tr>`;
+  } else if (!achs || achs.length === 0) {
+    rows = `<tr><td colspan="5" class="table-empty">No achievements awarded yet.</td></tr>`;
+  } else {
+    rows = achs.map(a => `
+      <tr>
+        <td><img src="${a.image_url}" style="width:40px; height:auto; border-radius:4px; max-height:40px; object-fit:contain;" /></td>
+        <td><strong>${a.title}</strong></td>
+        <td>${a.profiles?.full_name || 'Unknown'}</td>
+        <td>${new Date(a.created_at).toLocaleDateString()}</td>
+        <td>
+          <div class="table-actions">
+            <button class="btn action-btn btn-danger delete-ach-btn" data-id="${a.id}">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  panel.innerHTML = `
+    <div class="panel-toolbar">
+      <h3>Player Trophies</h3>
+      <button class="btn btn-primary" id="addAchievementBtn">+ Award Trophy</button>
+    </div>
+    <div class="dash-card">
+      <div class="player-list-table">
+        <table>
+          <thead>
+            <tr><th>Trophy</th><th>Title</th><th>Player</th><th>Awarded On</th><th>Action</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addAchievementBtn')?.addEventListener('click', async () => {
+    document.getElementById('achievementForm').reset();
+    document.getElementById('achImagePreview').innerHTML = '<span style="color:var(--gray);">No image selected</span>';
+    
+    // Load players into select
+    const playerSelect = document.getElementById('achPlayerId');
+    playerSelect.innerHTML = '<option value="">Loading players...</option>';
+    openModal('achievementModal');
+    
+    const { data: players } = await supabase.from('profiles').select('id, full_name').eq('role', 'player').order('full_name');
+    playerSelect.innerHTML = '<option value="">Select a player...</option>';
+    players?.forEach(p => {
+      playerSelect.innerHTML += `<option value="${p.id}">${p.full_name}</option>`;
+    });
+  });
+
+  document.querySelectorAll('.delete-ach-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Delete this trophy?')) return;
+      await supabase.from('player_achievements').delete().eq('id', btn.dataset.id);
+      showToast('Trophy removed.');
+      renderAchievementsPanel();
+    });
+  });
+}
+
+async function saveAchievement(e) {
+  e.preventDefault();
+  if (!supabase) return showToast('Supabase not configured', 'error');
+
+  const btn = document.getElementById('achievementSubmitBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    let imageUrl = document.getElementById('achImageUrl').value;
+    const file = document.getElementById('achImageFile').files[0];
+    
+    if (file) {
+      const fileName = `${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage.from('achievements').upload(fileName, file);
+      if (error) throw error;
+      const { data: pubData } = supabase.storage.from('achievements').getPublicUrl(data.path);
+      imageUrl = pubData.publicUrl;
+    }
+
+    if (!imageUrl) throw new Error("Please provide a Trophy image via upload or URL.");
+
+    const payload = {
+      player_id: document.getElementById('achPlayerId').value,
+      title: document.getElementById('achTitle').value,
+      image_url: imageUrl
+    };
+
+    const { error } = await supabase.from('player_achievements').insert([payload]);
+    if (error) throw error;
+
+    showToast('Trophy Awarded gracefully!');
+    closeModal('achievementModal');
+    renderAchievementsPanel();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.textContent = 'Save Achievement';
+    btn.disabled = false;
+  }
+}
+
 // ─── Init ────────────────────────────────────────────────────
 const panelRenderers = {
   overview: renderOverviewPanel,
@@ -2738,6 +2952,7 @@ const panelRenderers = {
   fixtures: renderFixturesPanel,
   finances: renderFinancesPanel,
   performance: renderPerformancePanel,
+  achievements: renderAchievementsPanel,
   medical: renderMedicalPanel,
   standings: renderStandingsPanel,
   messages: renderMessagesPanel,
@@ -2752,6 +2967,7 @@ const panelTitles = {
   fixtures: 'Fixtures & Results',
   finances: 'Finances & Payroll',
   performance: 'Performance Tracking',
+  achievements: 'Player Achievements',
   medical: 'Medical Logs',
   standings: 'League Standings',
   messages: 'Contact Messages',
@@ -2850,6 +3066,7 @@ export function init() {
 
   // Form Submissions
   document.getElementById('playerForm')?.addEventListener('submit', savePlayer);
+  document.getElementById('achievementForm')?.addEventListener('submit', saveAchievement);
   document.getElementById('newsForm')?.addEventListener('submit', saveNews);
   document.getElementById('fixtureForm')?.addEventListener('submit', saveFixture);
   document.getElementById('highlightForm')?.addEventListener('submit', saveHighlight);
@@ -2891,6 +3108,7 @@ export function init() {
   setupImagePreview('pProfilePhoto', 'pProfilePreview', 'width:100px; height:auto; border-radius:4px; object-fit:cover;', 'No profile photo');
   setupImagePreview('adminEditAvatarFile', 'adminEditAvatarPreview', 'width:100%; height:100%; object-fit:contain;', 'No image selected');
   setupImagePreview('nImageFile', 'nImagePreview', 'width:100%; height:100%; object-fit:contain;', '<span style="color:var(--gray);">No image selected</span>');
+  setupImagePreview('achImageFile', 'achImagePreview', 'width:100%; height:100%; object-fit:contain;', '<span style="color:var(--gray);">No image selected</span>');
 
   // ── Logo Selector Library Logic ──
   let activeLogoTarget = null;

@@ -1109,6 +1109,19 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .footer-bottom { flex-direction: column; text-align: center; }
   .section { padding: 60px 0; }
 }
+
+@media (max-width: 600px) {
+  .match-card { padding: 16px 12px; }
+  .match-teams { gap: 8px; }
+  .match-team { gap: 6px; flex-direction: column; align-items: center; text-align: center; }
+  .home-side { flex-direction: column-reverse; }
+  .away-side { flex-direction: column; }
+  .team-logo { width: 36px; height: 36px; }
+  .match-scorebox { padding: 0 6px; }
+  .match-score { min-width: 60px; padding: 6px 10px; }
+  .match-score-num { font-size: 1.5rem; }
+  .match-team-name { font-size: 0.72rem; }
+}
 @media (max-width: 480px) {
   .players-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-masonry { columns: 2; }
@@ -1555,13 +1568,25 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .finance-row span { color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; }
 
 /* Player Achievements */
-.achievements-shelf { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.achievements-shelf { 
+  padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; 
+}
 .achievement-item {
-  display: flex; align-items: center; gap: 16px; padding: 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 16px; text-align: center;
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;
   transition: var(--transition);
 }
-.achievement-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+.achievement-item:hover { 
+  transform: translateY(-5px); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); 
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.trophy-img {
+  width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+}
+.trophy-details { display: flex; flex-direction: column; gap: 4px; }
+.trophy-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; color: #FFD700; text-transform: uppercase; letter-spacing: 1px; }
+.trophy-date { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+
 .ach-icon { font-size: 2rem; }
 .ach-text strong { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
 .ach-text small { color: var(--gray); font-size: 0.75rem; }
@@ -1605,6 +1630,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .btn-sm { padding: 5px 14px; font-size: 0.78rem; }
 .btn-danger { background: rgba(204,0,0,0.2); color: #ff5555; border: 1px solid rgba(204,0,0,0.3); }
 .btn-danger:hover { background: var(--red); color: var(--white); }
+.btn-warning { background: rgba(255,152,0,0.15); color: #ffad33; border: 1px solid rgba(255,152,0,0.35); }
+.btn-warning:hover { background: rgba(255,152,0,0.85); color: var(--dark); }
 
 /* ===== Welcome Banner ===== */
 .dash-welcome-banner {
@@ -2367,4 +2394,81 @@ select.form-input option {
 
 @media (max-width: 1100px) {
   .video-lightbox-content { max-width: 90vw; }
+}
+
+/* ===== Player Documents Tab ===== */
+.doc-upload-zone {
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.doc-upload-zone:hover,
+.doc-upload-zone.drag-over {
+  border-color: rgba(204,0,0,0.5);
+  background: rgba(204,0,0,0.05);
+  box-shadow: 0 0 0 4px rgba(204,0,0,0.08);
+}
+.doc-upload-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.doc-upload-label { color: rgba(255,255,255,0.7); font-size: 0.95rem; margin: 0; }
+.doc-upload-hint  { color: var(--gray); font-size: 0.8rem; }
+
+/* Document list */
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s ease;
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-item:hover { background: rgba(255,255,255,0.03); }
+
+.doc-item-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(204,0,0,0.08);
+  border: 1px solid rgba(204,0,0,0.2);
+  border-radius: 10px;
+}
+.doc-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.doc-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 4px;
+}
+.doc-item-meta {
+  font-size: 0.75rem;
+  color: var(--gray);
+  margin: 0;
+}
+.doc-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .doc-item { flex-wrap: wrap; }
+  .doc-item-actions { width: 100%; justify-content: flex-end; }
 }
