@@ -1568,28 +1568,130 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .finance-row span { color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; }
 
 /* Player Achievements */
+/* Player Achievements & Trophy Room */
 .achievements-shelf { 
-  padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; 
+  padding: 30px; 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+  gap: 30px; 
+  background: rgba(0,0,0,0.15);
+  border-radius: 16px;
+  min-height: 200px;
 }
-.achievement-item {
-  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 16px; text-align: center;
-  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;
-  transition: var(--transition);
+.trophy-visual-item {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 35px 20px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
-.achievement-item:hover { 
-  transform: translateY(-5px); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); 
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+.trophy-visual-item::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at center, rgba(255,215,0,0.08) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
+.trophy-visual-item:hover {
+  transform: translateY(-10px) scale(1.02);
+  border-color: rgba(255,215,0,0.3);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 20px rgba(255,215,0,0.1);
+  background: rgba(255,255,255,0.08);
+}
+.trophy-visual-item:hover::before { opacity: 1; }
 .trophy-img {
-  width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+  width: 120px; height: 120px; 
+  object-fit: contain; 
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6));
+  transition: transform 0.5s ease;
+  z-index: 1;
 }
-.trophy-details { display: flex; flex-direction: column; gap: 4px; }
-.trophy-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; color: #FFD700; text-transform: uppercase; letter-spacing: 1px; }
-.trophy-date { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.trophy-visual-item:hover .trophy-img {
+  transform: scale(1.15) rotate(5deg);
+}
+.trophy-details { z-index: 1; }
+.trophy-title { 
+  font-family: 'Oswald', sans-serif; 
+  font-size: 1.25rem; 
+  color: #FFD700; 
+  text-transform: uppercase; 
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 4px;
+}
+.trophy-date { 
+  font-size: 0.75rem; 
+  color: rgba(255,255,255,0.5); 
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
 
-.ach-icon { font-size: 2rem; }
-.ach-text strong { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
-.ach-text small { color: var(--gray); font-size: 0.75rem; }
+/* Player Documents Portal */
+.doc-upload-zone {
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 40px 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+}
+.doc-upload-zone:hover, .doc-upload-zone.drag-over {
+  border-color: var(--red);
+  background: rgba(204,0,0,0.05);
+  transform: translateY(-2px);
+}
+.doc-upload-icon { font-size: 3rem; margin-bottom: 12px; display: block; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); }
+.doc-upload-label { font-size: 1rem; color: var(--white); font-weight: 600; letter-spacing: 0.5px; }
+.doc-upload-hint { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
+
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.doc-item:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateX(8px);
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.doc-item-icon {
+  font-size: 1.8rem;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,31,91,0.2);
+  border: 1px solid rgba(0,31,91,0.3);
+  border-radius: 10px;
+}
+.doc-item-info { flex: 1; }
+.doc-item-name { font-size: 0.95rem; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+.doc-item-meta { font-size: 0.75rem; color: var(--gray); font-weight: 500; }
+.doc-item-actions { display: flex; gap: 8px; }
+
 
 @media (max-width: 1024px) {
   .dash-split-grid { grid-template-columns: 1fr; }
