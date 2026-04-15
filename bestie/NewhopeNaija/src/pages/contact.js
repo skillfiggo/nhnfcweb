@@ -189,16 +189,16 @@ function footerHTML() {
       <div class="footer-brand-name">NEWHOPE <span>NAIJA</span> FC</div>
       <p class="footer-brand-desc">${t('heroDesc1') || 'Empowering the next generation of football stars.'}</p>
       <div class="footer-socials">
-        <a href="#" class="footer-social" title="Twitter/X">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <a href="https://www.facebook.com/profile.php?id=61583600303362" target="_blank" class="footer-social" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M22.675 0h-21.35C.597 0 0 .597 0 1.326v21.348C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.325-.597 1.325-1.326V1.326C24 .597 23.403 0 22.675 0z"/></svg>
         </a>
-        <a href="#" class="footer-social" title="Instagram">
+        <a href="https://www.instagram.com/newhopenaijafc" target="_blank" class="footer-social" title="Instagram">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
         </a>
-        <a href="#" class="footer-social" title="TikTok">
+        <a href="https://www.tiktok.com/@newhopenaijafc" target="_blank" class="footer-social" title="TikTok">
           <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2-1.74 2.89 2.89 0 0 1 2.89-2.89 2.89 2.89 0 0 1 1.5.42V7.71a6.08 6.08 0 0 0-4.39-.51 6.32 6.32 0 0 0-4.63 4.29 6.3 6.3 0 0 0 1 6.39 6.32 6.32 0 0 0 5.09 2.05 6.32 6.32 0 0 0 6.06-6.19V8.67a8.21 8.21 0 0 0 4.9 1.63V6.86a4.81 4.81 0 0 1-0-0.17z"/></svg>
         </a>
-        <a href="#" class="footer-social" title="YouTube">
+        <a href="https://www.youtube.com/@newhopenaijafc" target="_blank" class="footer-social" title="YouTube">
           <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.95C18.88 4 12 4 12 4s-6.88 0-8.6.47a2.78 2.78 0 0 0-1.94 1.95C1 8.16 1 12 1 12s0 3.84.46 5.58a2.78 2.78 0 0 0 1.94 1.95C5.12 20 12 20 12 20s6.88 0 8.6-.47a2.78 2.78 0 0 0 1.94-1.95C23 15.84 23 12 23 12s0-3.84-.46-5.58zM9.54 15.18V8.82L15.46 12z"/></svg>
         </a>
       </div>
