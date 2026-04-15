@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase.js';
-import { showToast } from '../lib/utils.js';
+import { showToast, compressImageToWebp, logAdminAction } from '../lib/utils.js';
+
+// ─── Admin identity cache (populated in init()) ──────────────
+let _adminId = null;
+let _adminName = 'Admin';
 
 export const title = 'Admin Dashboard';
 
@@ -49,6 +53,7 @@ export function render() {
           <a class="sidebar-link" data-panel="gallery"><span class="sidebar-icon">🖼️</span> Gallery</a>
           <a class="sidebar-link" data-panel="users"><span class="sidebar-icon">🔐</span> Manage Users</a>
           <a class="sidebar-link" data-panel="settings"><span class="sidebar-icon">⚙️</span> Settings</a>
+          <a class="sidebar-link" data-panel="logs"><span class="sidebar-icon">📖</span> Audit Logs</a>
           <button id="adminLogoutBtn" class="sidebar-link logout-btn"><span class="sidebar-icon">🚪</span> Logout</button>
         </nav>
       </aside>
@@ -356,6 +361,28 @@ export function render() {
             <div id="logoUploadStatus" style="margin-top: 10px; font-size: 0.8rem;"></div>
           </div>
           <div id="logoGalleryGrid" class="logo-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Trophy Image Selector Modal ── -->
+    <div class="modal-overlay" id="achSelectorModal" style="z-index: 10000;">
+      <div class="modal-box" style="max-width: 800px; max-height: 85vh;">
+        <div class="modal-header">
+          <h3>Select Trophy Image</h3>
+          <button class="modal-close" data-close="achSelectorModal">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; overflow-y: auto;">
+          <div class="upload-logo-area" style="margin-bottom: 20px; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; text-align: center; background: rgba(0,0,0,0.2);">
+            <p style="margin-bottom: 12px; font-size: 0.9rem; color: var(--gray);">Upload a new trophy image to the library (Max 2MB)</p>
+            <input type="file" id="newAchUpload" accept="image/*" style="display: none;" />
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('newAchUpload').click()">Choose File</button>
+            <div id="newAchName" style="margin-top: 10px; font-size: 0.85rem; color: var(--white); display:none;"></div>
+            <button type="button" id="uploadAchBtn" class="btn btn-primary" style="margin-top: 10px; display:none;">Upload to Library</button>
+            <div id="achUploadStatus" style="margin-top: 10px; font-size: 0.8rem;"></div>
+          </div>
+          <div id="achGalleryGrid" class="logo-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;">
             <div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">Loading library...</div>
           </div>
         </div>
@@ -751,13 +778,14 @@ export function render() {
             <input type="text" id="achTitle" class="form-input" required />
           </div>
           <div class="form-group">
-            <label>Trophy Image (Upload file OR provide URL) *</label>
-            <div id="achImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;">
+            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+              <span>Trophy Image URL *</span>
+              <button type="button" class="btn btn-sm btn-outline select-ach-btn" data-target="achImageUrl" style="padding: 2px 8px; font-size: 0.7rem;">Browse Library</button>
+            </label>
+            <div id="achImagePreview" class="image-preview" style="width: 100%; height: 160px; border-style: solid; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; background-size: contain; background-position: center; background-repeat: no-repeat;">
               <span style="color:var(--gray);">No image selected</span>
             </div>
-            <input type="file" id="achImageFile" class="form-input" accept="image/*" style="margin-bottom: 8px;" />
-            <div style="font-size: 0.85rem; color: var(--gray); text-align: center; margin-bottom: 8px;">- OR -</div>
-            <input type="url" id="achImageUrl" class="form-input" placeholder="https://..." />
+            <input type="url" id="achImageUrl" class="form-input" placeholder="https://..." required />
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-outline" data-close="achievementModal">Cancel</button>
@@ -984,9 +1012,10 @@ async function savePlayer(e) {
 
   // Handle File Uploads
   try {
-    const passportFile = document.getElementById('pPassportPhoto').files[0];
+    let passportFile = document.getElementById('pPassportPhoto').files[0];
     if (passportFile) {
       console.log('Uploading passport photo:', passportFile.name);
+      passportFile = await compressImageToWebp(passportFile);
       const pName = `passports/${Date.now()}_${passportFile.name}`;
       const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, passportFile);
       if (!err && uploadData) {
@@ -999,9 +1028,10 @@ async function savePlayer(e) {
       }
     }
 
-    const photoFile = document.getElementById('pProfilePhoto').files[0];
+    let photoFile = document.getElementById('pProfilePhoto').files[0];
     if (photoFile) {
       console.log('Uploading profile photo:', photoFile.name);
+      photoFile = await compressImageToWebp(photoFile);
       const pName = `photos/${Date.now()}_${photoFile.name}`;
       const { data: uploadData, error: err } = await supabase.storage.from('players').upload(pName, photoFile);
       if (!err && uploadData) {
@@ -1035,6 +1065,7 @@ async function savePlayer(e) {
         await supabase.from('player_stats').insert({ player_id: id, ...statsData });
       }
       showToast('Player updated successfully!');
+      logAdminAction(supabase, _adminId, _adminName, 'UPDATE', 'Player', `Updated player: ${profileData.full_name}`);
     } else {
       // Invite new player via Edge Function
       if (!email) throw new Error("An email address is required to invite a new player.");
@@ -1095,6 +1126,7 @@ async function savePlayer(e) {
       }
       
       showToast('Player invited and profile beautifully setup!');
+      logAdminAction(supabase, _adminId, _adminName, 'CREATE', 'Player', `Invited new player: ${profileData.full_name}`);
     }
     closeModal('playerModal');
     renderPlayersPanel();
@@ -1163,6 +1195,7 @@ async function deletePlayer(id) {
     if (error) throw error;
 
     showToast('Player deleted.', 'info');
+    logAdminAction(supabase, _adminId, _adminName, 'DELETE', 'Player', `Deleted player ID: ${id}`);
     renderPlayersPanel();
   } catch (err) {
     showToast('Error deleting player: ' + err.message, 'error');
@@ -1258,10 +1291,11 @@ async function saveNews(e) {
     const { data: { user } } = await supabase.auth.getUser();
     
     let imageUrl = document.getElementById('nImage').value;
-    const photoFile = document.getElementById('nImageFile')?.files[0];
+    let photoFile = document.getElementById('nImageFile')?.files[0];
 
     if (photoFile) {
       console.log('Uploading news photo:', photoFile.name);
+      photoFile = await compressImageToWebp(photoFile);
       const pName = `articles/${Date.now()}_${photoFile.name}`;
       const { data: uploadData, error: err } = await supabase.storage.from('news-images').upload(pName, photoFile);
       if (!err && uploadData) {
@@ -1289,10 +1323,12 @@ async function saveNews(e) {
       const { error } = await supabase.from('news').update(payload).eq('id', id);
       if (error) throw error;
       showToast('News updated!');
+      logAdminAction(supabase, _adminId, _adminName, 'UPDATE', 'News', `Updated article: ${payload.title}`);
     } else {
       const { error } = await supabase.from('news').insert(payload);
       if (error) throw error;
       showToast('News published!');
+      logAdminAction(supabase, _adminId, _adminName, 'CREATE', 'News', `Published article: ${payload.title}`);
     }
     closeModal('newsModal');
     renderNewsPanel();
@@ -1309,6 +1345,7 @@ async function deleteNews(id) {
   const { error } = await supabase.from('news').delete().eq('id', id);
   if (error) return showToast('Error: ' + error.message, 'error');
   showToast('News deleted.', 'info');
+  logAdminAction(supabase, _adminId, _adminName, 'DELETE', 'News', `Deleted news ID: ${id}`);
   renderNewsPanel();
 }
 
@@ -1417,10 +1454,12 @@ async function saveFixture(e) {
       const { error } = await supabase.from('fixtures').update(payload).eq('id', id);
       if (error) throw error;
       showToast('Fixture updated!');
+      logAdminAction(supabase, _adminId, _adminName, 'UPDATE', 'Fixture', `Updated fixture: ${payload.home_team} vs ${payload.away_team}`);
     } else {
       const { error } = await supabase.from('fixtures').insert(payload);
       if (error) throw error;
       showToast('Fixture added!');
+      logAdminAction(supabase, _adminId, _adminName, 'CREATE', 'Fixture', `Added fixture: ${payload.home_team} vs ${payload.away_team}`);
     }
     closeModal('fixtureModal');
     renderFixturesPanel();
@@ -1434,6 +1473,7 @@ async function deleteFixture(id) {
   const { error } = await supabase.from('fixtures').delete().eq('id', id);
   if (error) return showToast('Error: ' + error.message, 'error');
   showToast('Fixture deleted.', 'info');
+  logAdminAction(supabase, _adminId, _adminName, 'DELETE', 'Fixture', `Deleted fixture ID: ${id}`);
   renderFixturesPanel();
 }
 
@@ -1531,6 +1571,7 @@ async function changeUserRole(userId, newRole) {
   const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
   if (error) return showToast('Error: ' + error.message, 'error');
   showToast(`User role updated to ${newRole}!`);
+  logAdminAction(supabase, _adminId, _adminName, 'ROLE CHANGE', 'User', `Changed user ${userId} role to: ${newRole}`);
   renderUsersPanel();
 }
 
@@ -1743,6 +1784,7 @@ async function saveAdBanner(e) {
   try {
     let imageUrl = null;
     if (file) {
+      file = await compressImageToWebp(file);
       const fName = `banners/home_ad_${Date.now()}`;
       const { data, error } = await supabase.storage.from('adverts').upload(fName, file);
       if (error) throw error;
@@ -1793,10 +1835,11 @@ async function saveAdminProfile(e) {
   btn.disabled = true;
 
   const fullName = document.getElementById('adminEditName').value;
-  const avatarFile = document.getElementById('adminEditAvatarFile').files[0];
+  let avatarFile = document.getElementById('adminEditAvatarFile').files[0];
   let avatarUrl = null;
 
   if (avatarFile) {
+    avatarFile = await compressImageToWebp(avatarFile);
     const fName = `avatars/${user.id}_${Date.now()}`;
     const { data: uploadData, error: uploadErr } = await supabase.storage.from('players').upload(fName, avatarFile);
     if (!uploadErr && uploadData) {
@@ -1862,10 +1905,11 @@ async function saveHighlight(e) {
     const highlights = current?.value || [];
 
     const index = parseInt(document.getElementById('highlightFormIndex').value);
-    const file = document.getElementById('hImageFile').files[0];
+    let file = document.getElementById('hImageFile').files[0];
     let imageUrl = document.getElementById('hImage').value.trim();
 
     if (file) {
+      file = await compressImageToWebp(file);
       const fName = `highlights/${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadErr } = await supabase.storage.from('gallery-images').upload(fName, file);
       if (uploadErr) throw uploadErr;
@@ -1947,10 +1991,11 @@ async function saveSlider(e) {
     const slides = current?.value || [];
 
     const index = parseInt(document.getElementById('sliderFormIndex').value);
-    const file = document.getElementById('slImageFile').files[0];
+    let file = document.getElementById('slImageFile').files[0];
     let imageUrl = document.getElementById('slImageUrl').value.trim();
 
     if (file) {
+      file = await compressImageToWebp(file);
       const fName = `slides/${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadErr } = await supabase.storage.from('slider-images').upload(fName, file);
       if (uploadErr) throw uploadErr;
@@ -2796,7 +2841,8 @@ async function saveGalleryPhoto(e) {
     const fileInput = document.getElementById('gImageFile');
     
     if (fileInput.files && fileInput.files[0]) {
-      const file = fileInput.files[0];
+      let file = fileInput.files[0];
+      file = await compressImageToWebp(file);
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const { data: uploadData, error: uploadErr } = await supabase.storage.from('gallery-images').upload(fileName, file);
       if (uploadErr) throw uploadErr;
@@ -2879,6 +2925,7 @@ async function renderAchievementsPanel() {
   document.getElementById('addAchievementBtn')?.addEventListener('click', async () => {
     document.getElementById('achievementForm').reset();
     document.getElementById('achImagePreview').innerHTML = '<span style="color:var(--gray);">No image selected</span>';
+    document.getElementById('achImagePreview').style.backgroundImage = 'none';
     
     // Load players into select
     const playerSelect = document.getElementById('achPlayerId');
@@ -2912,17 +2959,8 @@ async function saveAchievement(e) {
 
   try {
     let imageUrl = document.getElementById('achImageUrl').value;
-    const file = document.getElementById('achImageFile').files[0];
-    
-    if (file) {
-      const fileName = `${Date.now()}_${file.name}`;
-      const { data, error } = await supabase.storage.from('achievements').upload(fileName, file);
-      if (error) throw error;
-      const { data: pubData } = supabase.storage.from('achievements').getPublicUrl(data.path);
-      imageUrl = pubData.publicUrl;
-    }
 
-    if (!imageUrl) throw new Error("Please provide a Trophy image via upload or URL.");
+    if (!imageUrl) throw new Error("Please provide a Trophy image URL.");
 
     const payload = {
       player_id: document.getElementById('achPlayerId').value,
@@ -2959,6 +2997,7 @@ const panelRenderers = {
   gallery: renderGalleryPanel,
   users: renderUsersPanel,
   settings: renderSettingsPanel,
+  logs: renderAuditLogsPanel,
 };
 const panelTitles = {
   overview: 'Overview',
@@ -2974,7 +3013,57 @@ const panelTitles = {
   gallery: 'Photo Gallery',
   users: 'Manage Users',
   settings: 'Global Settings',
+  logs: 'Audit Logs',
 };
+
+async function renderAuditLogsPanel() {
+  const panel = document.getElementById('panelContent');
+  panel.innerHTML = `<div class="panel-loading">Loading audit logs...</div>`;
+  const { data: logs, error } = await supabase
+    .from('admin_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) {
+    panel.innerHTML = `<div class="panel-empty">Error loading logs: ${error.message}</div>`;
+    return;
+  }
+  const actionBadge = (type) => {
+    const map = { CREATE: 'badge--green', UPDATE: 'badge--blue', DELETE: 'badge--red', 'ROLE CHANGE': 'badge--orange' };
+    return `<span class="badge ${map[type] || 'badge--gray'}">${type}</span>`;
+  };
+  panel.innerHTML = `
+    <div class="panel-header-row" style="margin-bottom:20px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Admin Activity Log</h3>
+        <p style="color:var(--gray); font-size:0.85rem; margin:0;">Showing the last ${logs.length} actions across all admins.</p>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date &amp; Time</th>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.length === 0 ? `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--gray);">No activity recorded yet.</td></tr>` : logs.map(l => `
+          <tr>
+            <td style="white-space:nowrap; font-size:0.82rem; color:var(--gray);">${new Date(l.created_at).toLocaleString()}</td>
+            <td><strong>${l.admin_name || 'Unknown'}</strong></td>
+            <td>${actionBadge(l.action_type)}</td>
+            <td><span style="color:var(--accent);">${l.entity || '—'}</span></td>
+            <td style="font-size:0.88rem;">${l.details || '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 
 async function sendTestEmail(e) {
   e.preventDefault();
@@ -3024,8 +3113,10 @@ export function init() {
   if (supabase) {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
+      _adminId = user.id;
       supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
         if (data?.full_name) {
+          _adminName = data.full_name;
           document.getElementById('adminName').textContent = data.full_name;
           if (data.avatar_url) {
             document.getElementById('adminAvatar').innerHTML = `<img src="${data.avatar_url}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
@@ -3108,7 +3199,19 @@ export function init() {
   setupImagePreview('pProfilePhoto', 'pProfilePreview', 'width:100px; height:auto; border-radius:4px; object-fit:cover;', 'No profile photo');
   setupImagePreview('adminEditAvatarFile', 'adminEditAvatarPreview', 'width:100%; height:100%; object-fit:contain;', 'No image selected');
   setupImagePreview('nImageFile', 'nImagePreview', 'width:100%; height:100%; object-fit:contain;', '<span style="color:var(--gray);">No image selected</span>');
-  setupImagePreview('achImageFile', 'achImagePreview', 'width:100%; height:100%; object-fit:contain;', '<span style="color:var(--gray);">No image selected</span>');
+
+  const updateAchPreview = () => {
+    const preview = document.getElementById('achImagePreview');
+    const url = document.getElementById('achImageUrl').value;
+    if (url) {
+      preview.style.backgroundImage = `url('${url}')`;
+      preview.innerHTML = '';
+    } else {
+      preview.style.backgroundImage = 'none';
+      preview.innerHTML = '<span style="color:var(--gray);">No image selected</span>';
+    }
+  };
+  document.getElementById('achImageUrl')?.addEventListener('input', updateAchPreview);
 
   // ── Logo Selector Library Logic ──
   let activeLogoTarget = null;
@@ -3178,7 +3281,7 @@ export function init() {
   });
 
   uploadLogoBtn?.addEventListener('click', async () => {
-    const file = uploadLogoInp.files[0];
+    let file = uploadLogoInp.files[0];
     if (!file) return;
     
     if (file.size > 1048576) {
@@ -3207,6 +3310,109 @@ export function init() {
       uploadLogoBtn.style.display = 'none';
       setTimeout(() => { uploadLogoStatus.textContent = ''; }, 3000);
       loadLogosGallery();
+    }
+  });
+
+  // ── Achievement Selector Library Logic ──
+  let activeAchTarget = null;
+  document.querySelectorAll('.select-ach-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      activeAchTarget = e.currentTarget.dataset.target;
+      openModal('achSelectorModal');
+      loadAchsGallery();
+    });
+  });
+
+  async function loadAchsGallery() {
+    const grid = document.getElementById('achGalleryGrid');
+    if (!supabase || !grid) return;
+    grid.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">Loading library...</div>';
+    
+    const { data, error } = await supabase.storage.from('achievements').list('', { sortBy: { column: 'created_at', order: 'desc' } });
+    if (error) {
+      grid.innerHTML = `<div style="text-align:center; padding:20px; color:#ff5555; grid-column: 1/-1;">Error: ${error.message}</div>`;
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gray); grid-column: 1/-1;">No images found. Upload your first trophy image!</div>';
+      return;
+    }
+
+    const validFiles = data.filter(f => !f.name.startsWith('.'));
+    
+    let html = '';
+    for (const file of validFiles) {
+      const { data: pubData } = supabase.storage.from('achievements').getPublicUrl(file.name);
+      html += `
+        <div class="logo-gallery-item" style="border: 2px solid transparent; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.03); padding: 10px;" 
+             onclick="selectAchUrl('${pubData.publicUrl}')" 
+             onmouseover="this.style.borderColor='#cc0000'; this.style.transform='scale(1.05)';" 
+             onmouseout="this.style.borderColor='transparent'; this.style.transform='none';">
+          <img src="${pubData.publicUrl}" style="width: 100%; height: 80px; object-fit: contain;" title="${file.name}" />
+        </div>
+      `;
+    }
+    grid.innerHTML = html;
+  }
+
+  window.selectAchUrl = function(url) {
+    if (activeAchTarget) {
+      const target = document.getElementById(activeAchTarget);
+      if (target) {
+        target.value = url;
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    closeModal('achSelectorModal');
+  };
+
+  const uploadAchInp = document.getElementById('newAchUpload');
+  const uploadAchName = document.getElementById('newAchName');
+  const uploadAchBtn = document.getElementById('uploadAchBtn');
+  const uploadAchStatus = document.getElementById('achUploadStatus');
+
+  uploadAchInp?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      uploadAchName.textContent = file.name;
+      uploadAchName.style.display = 'block';
+      uploadAchBtn.style.display = 'inline-block';
+      uploadAchStatus.textContent = '';
+    }
+  });
+
+  uploadAchBtn?.addEventListener('click', async () => {
+    let file = uploadAchInp.files[0];
+    if (!file) return;
+    
+    if (file.size > 2097152) {
+      uploadAchStatus.style.color = '#ff5555';
+      uploadAchStatus.textContent = 'File too large (Max 2MB).';
+      return;
+    }
+
+    uploadAchBtn.textContent = 'Uploading...';
+    uploadAchBtn.disabled = true;
+
+    if (typeof compressImageToWebp !== 'undefined') file = await compressImageToWebp(file);
+    const pName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const { error: err } = await supabase.storage.from('achievements').upload(pName, file);
+    
+    uploadAchBtn.textContent = 'Upload to Library';
+    uploadAchBtn.disabled = false;
+    
+    if (err) {
+      uploadAchStatus.style.color = '#ff5555';
+      uploadAchStatus.textContent = err.message;
+    } else {
+      uploadAchStatus.style.color = '#00e676';
+      uploadAchStatus.textContent = 'Uploaded successfully!';
+      uploadAchInp.value = '';
+      uploadAchName.style.display = 'none';
+      uploadAchBtn.style.display = 'none';
+      setTimeout(() => { uploadAchStatus.textContent = ''; }, 3000);
+      loadAchsGallery();
     }
   });
 
