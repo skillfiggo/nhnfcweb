@@ -195,7 +195,7 @@ function footerHTML() {
         <a href="https://www.instagram.com/newhopenaijafc" target="_blank" class="footer-social" title="Instagram">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
         </a>
-        <a href="https://www.tiktok.com/@newhopenaijafc" target="_blank" class="footer-social" title="TikTok">
+        <a href="https://www.tiktok.com/@newhope.naija.foo" target="_blank" class="footer-social" title="TikTok">
           <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2-1.74 2.89 2.89 0 0 1 2.89-2.89 2.89 2.89 0 0 1 1.5.42V7.71a6.08 6.08 0 0 0-4.39-.51 6.32 6.32 0 0 0-4.63 4.29 6.3 6.3 0 0 0 1 6.39 6.32 6.32 0 0 0 5.09 2.05 6.32 6.32 0 0 0 6.06-6.19V8.67a8.21 8.21 0 0 0 4.9 1.63V6.86a4.81 4.81 0 0 1-0-0.17z"/></svg>
         </a>
         <a href="https://www.youtube.com/@newhopenaijafc" target="_blank" class="footer-social" title="YouTube">
