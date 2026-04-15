@@ -119,16 +119,20 @@ navOverlay?.addEventListener('click', closeMenu);
 
 // Close mobile menu on nav link click (delegated)
 document.getElementById('mobileNav')?.addEventListener('click', (e) => {
-  if (e.target.closest('.mobile-nav-link')) closeMenu();
+  const link = e.target.closest('a');
+  if (link && !link.classList.contains('mega-link')) {
+    closeMenu();
+  }
 });
 
 // ===== Mega Menu Panel Switcher =====
 document.querySelectorAll('.mega-link[data-panel]').forEach(link => {
-  link.addEventListener('mouseenter', () => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
     const panelId = link.getAttribute('data-panel');
     // Hide all panels
     document.querySelectorAll('.mega-panel').forEach(p => p.classList.remove('active'));
-    // Show the hovered panel
+    // Show the clicked panel
     document.getElementById(panelId)?.classList.add('active');
     // Update active link style
     document.querySelectorAll('.mega-link').forEach(l => l.classList.remove('active-link'));
