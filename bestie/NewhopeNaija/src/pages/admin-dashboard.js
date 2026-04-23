@@ -1125,8 +1125,13 @@ async function savePlayer(e) {
         if (statsErr) throw statsErr;
       }
       
-      showToast('Player invited and profile beautifully setup!');
       logAdminAction(supabase, _adminId, _adminName, 'CREATE', 'Player', `Invited new player: ${profileData.full_name}`);
+      if (invokeData.invite_link) {
+        // No email provider — show admin the link to share manually
+        showInviteLinkDialog(invokeData.invite_link, email);
+      } else {
+        showToast('Player invited and profile beautifully setup! ✉️ Invitation email sent.');
+      }
     }
     closeModal('playerModal');
     renderPlayersPanel();
@@ -1171,7 +1176,11 @@ async function resendPlayerInvite(playerId, email, fullName, btn) {
       throw new Error(response.data?.error || 'Edge Function returned empty response.');
     }
 
-    showToast(`✅ Invitation resent to ${email}!`);
+    if (response.data.invite_link) {
+      showInviteLinkDialog(response.data.invite_link, email);
+    } else {
+      showToast(`✅ Invitation resent to ${email}!`);
+    }
   } catch (err) {
     showToast('Failed to resend invite: ' + err.message, 'error');
     console.error('[resendPlayerInvite]', err);
@@ -3427,4 +3436,70 @@ export function init() {
 
   // Render default panel
   renderOverviewPanel();
+}
+
+// ─── Invite Link Dialog ────────────────────────────────────────────────────────
+// Shown when no RESEND_API_KEY is set and the edge function returns a raw invite link.
+function showInviteLinkDialog(link, email) {
+  // Remove any existing dialog
+  document.getElementById('inviteLinkDialog')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'inviteLinkDialog';
+  overlay.style.cssText = `
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; padding: 20px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="background: #1a1a2e; border: 1px solid #cc0000; border-radius: 12px;
+                padding: 32px; max-width: 560px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+        <span style="font-size:28px;">🔗</span>
+        <div>
+          <h3 style="color:#fff; margin:0; font-size:1.1rem;">Invitation Link Generated</h3>
+          <p style="color:#a0aec0; margin:4px 0 0; font-size:0.85rem;">
+            No email provider configured. Share this link with <strong style="color:#fff;">${email}</strong> directly.
+          </p>
+        </div>
+      </div>
+
+      <div style="background:#0d0d1a; border:1px solid #333; border-radius:8px; padding:14px; margin-bottom:20px; word-break:break-all;">
+        <a href="${link}" target="_blank" style="color:#cc0000; font-size:0.8rem; text-decoration:none; line-height:1.5;">${link}</a>
+      </div>
+
+      <p style="color:#718096; font-size:0.8rem; margin:0 0 20px;">
+        ⚠️ This link expires in <strong style="color:#fff;">24 hours</strong>. The user clicks it to set their password and log in.
+      </p>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="copyInviteLinkBtn" style="flex:1; background:#cc0000; color:#fff; border:none; border-radius:8px;
+                padding:12px 20px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+          📋 Copy Link
+        </button>
+        <button id="closeInviteDialogBtn" style="flex:1; background:transparent; color:#a0aec0; border:1px solid #333;
+                border-radius:8px; padding:12px 20px; font-size:0.9rem; cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('copyInviteLinkBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.getElementById('copyInviteLinkBtn');
+      btn.textContent = '✅ Copied!';
+      btn.style.background = '#00c853';
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Link';
+        btn.style.background = '#cc0000';
+      }, 2500);
+    });
+  });
+
+  document.getElementById('closeInviteDialogBtn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 }
