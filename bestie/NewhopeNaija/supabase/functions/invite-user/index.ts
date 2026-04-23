@@ -180,12 +180,29 @@ serve(async (req) => {
       console.log('Invitation sent successfully via Resend.');
 
     } else {
-      console.log('No RESEND_API_KEY found. Using default Supabase invitation.');
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: full_name || '', role: 'player' }
+      console.log('No RESEND_API_KEY found. Generating invite link directly (no email will be sent).');
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'invite',
+        email: email,
+        options: {
+          redirectTo: `${req.headers.get('origin') || ''}/#setup-password`,
+          data: { full_name: full_name || '', role: 'player' }
+        }
       });
-      if (error) throw error;
-      invitedUser = data.user;
+      if (linkError) throw linkError;
+      invitedUser = linkData.user;
+      const inviteLink = linkData.properties?.action_link || linkData.properties?.verification_link || '';
+      console.log(`Invite link generated for ${email}.`);
+
+      return new Response(JSON.stringify({
+        success: true,
+        user: invitedUser,
+        invite_link: inviteLink,
+        message: 'No email provider configured. Share this invite link with the user directly.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
     }
 
     return new Response(JSON.stringify({ success: true, user: invitedUser }), {
