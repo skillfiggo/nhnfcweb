@@ -1784,7 +1784,7 @@ async function renderSettingsPanel() {
 async function saveAdBanner(e) {
   e.preventDefault();
   const btn = document.getElementById('saveAdBtn');
-  const file = document.getElementById('adBannerFile').files[0];
+  let file = document.getElementById('adBannerFile').files[0];
   const link = document.getElementById('adBannerLink').value;
 
   btn.textContent = 'Saving...';
@@ -1805,10 +1805,10 @@ async function saveAdBanner(e) {
       imageUrl = current?.value?.imageUrl;
     }
 
-    const { error } = await supabase.from('site_settings').upsert({
-      key: 'home_ad_banner',
-      value: { imageUrl, link }
-    });
+    const { error } = await supabase.from('site_settings').upsert(
+      { key: 'home_ad_banner', value: { imageUrl, link } },
+      { onConflict: 'key' }
+    );
 
     if (error) throw error;
     showToast('Banner settings saved!');
@@ -1940,7 +1940,10 @@ async function saveHighlight(e) {
       highlights.push(entry);
     }
 
-    const { error } = await supabase.from('site_settings').upsert({ key: 'home_highlights', value: highlights });
+    const { error } = await supabase.from('site_settings').upsert(
+      { key: 'home_highlights', value: highlights },
+      { onConflict: 'key' }
+    );
     if (error) throw error;
 
     showToast(index >= 0 ? 'Highlight updated!' : 'Highlight added!');
@@ -1957,7 +1960,10 @@ async function saveHighlight(e) {
 async function deleteHighlight(index, highlights) {
   if (!confirm('Delete this highlight?')) return;
   highlights.splice(index, 1);
-  const { error } = await supabase.from('site_settings').upsert({ key: 'home_highlights', value: highlights });
+  const { error } = await supabase.from('site_settings').upsert(
+    { key: 'home_highlights', value: highlights },
+    { onConflict: 'key' }
+  );
   if (error) return showToast('Error: ' + error.message, 'error');
   showToast('Highlight deleted.', 'info');
   renderSettingsPanel();
@@ -2024,7 +2030,10 @@ async function saveSlider(e) {
       slides.push(entry);
     }
 
-    const { error } = await supabase.from('site_settings').upsert({ key: 'home_slider', value: slides });
+    const { error } = await supabase.from('site_settings').upsert(
+      { key: 'home_slider', value: slides },
+      { onConflict: 'key' }
+    );
     if (error) throw error;
 
     showToast(index >= 0 ? 'Slide updated!' : 'Slide added!');
@@ -2041,7 +2050,10 @@ async function saveSlider(e) {
 async function deleteSlider(index, slides) {
   if (!confirm('Delete this slide?')) return;
   slides.splice(index, 1);
-  const { error } = await supabase.from('site_settings').upsert({ key: 'home_slider', value: slides });
+  const { error } = await supabase.from('site_settings').upsert(
+    { key: 'home_slider', value: slides },
+    { onConflict: 'key' }
+  );
   if (error) return showToast('Error: ' + error.message, 'error');
   showToast('Slide deleted.', 'info');
   renderSettingsPanel();

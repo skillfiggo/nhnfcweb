@@ -10,93 +10,11 @@ export function render() {
   <div class="secondary-menu container" style="min-height: 40px;"></div>
   <div id="hero">
     <div class="hero-slides" id="heroSlides">
-      <!-- Slide 1 -->
-      <div class="hero-slide active">
-        <div class="hero-bg"></div>
-        <div class="hero-bg-image" style="background-image: url('/images/hero-slide-1.jpg');"></div>
-        <div class="hero-gradient"></div>
-        <div class="hero-pattern"></div>
-        <div class="hero-grid-lines"></div>
-        <div class="container slide-content-wrap">
-          <div class="hero-content">
-            <div class="hero-left">
-              <div class="hero-tag">
-                <span class="dot"></span>
-                ${t('heroTag1')}
-              </div>
-              <div class="hero-welcome">${t('heroWelcome')}</div>
-              <h1 class="hero-title">
-                NEWHOPE<br>
-                <span class="red">NAIJA</span><br>
-                <span class="navy">${t('heroTitleNavy')}</span>
-              </h1>
-            </div>
-            <div class="hero-right">
-              <div class="hero-badge-wrap">
-                <div class="hero-badge-ring"></div>
-                <div class="hero-badge-ring-2"></div>
-                <div class="hero-badge-glow"></div>
-                <img src="/images/logo.png" alt="NewHope Naija FC" class="hero-logo-img" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Slide 2 -->
-      <div class="hero-slide">
-        <div class="hero-bg"></div>
-        <div class="hero-bg-image" style="background-image: url('/images/hero-slide-2.jpg');"></div>
-        <div class="hero-gradient"></div>
-        <div class="hero-pattern"></div>
-        <div class="hero-grid-lines"></div>
-        <div class="container slide-content-wrap">
-          <div class="hero-content">
-            <div class="hero-left">
-              <div class="hero-tag">
-                <span class="dot"></span>
-                ${t('heroTag2')}
-              </div>
-              <h1 class="hero-title">
-                ${t('heroTitle2A')}<br>
-                <span class="red">${t('heroTitle2B')}</span>
-              </h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide 3 -->
-      <div class="hero-slide">
-        <div class="hero-bg"></div>
-        <div class="hero-bg-image" style="background-image: url('/images/hero-slide-3.jpg');"></div>
-        <div class="hero-gradient"></div>
-        <div class="hero-pattern"></div>
-        <div class="hero-grid-lines"></div>
-        <div class="container slide-content-wrap">
-          <div class="hero-content">
-            <div class="hero-left">
-              <div class="hero-tag">
-                <span class="dot"></span>
-                ${t('heroTag3')}
-              </div>
-              <h1 class="hero-title">
-                ${t('heroTitle3A')}<br>
-                <span>${t('heroTitle3B')}</span>
-              </h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <!-- Slides are loaded dynamically from admin settings -->
     </div>
     
     <!-- Pagination -->
-    <div class="hero-pagination" id="heroPagination">
-      <span class="hero-dot active" data-index="0"></span>
-      <span class="hero-dot" data-index="1"></span>
-      <span class="hero-dot" data-index="2"></span>
-    </div>
+    <div class="hero-pagination" id="heroPagination"></div>
   </div>
   
 </section>
@@ -273,48 +191,75 @@ export function init() {
 
   setupSlider(); // Initial statics
 
-  // Fetch Custom Slider Data
-  if (supabase) {
-    supabase.from('site_settings').select('value').eq('key', 'home_slider').single().then(({ data }) => {
-      const slidesData = data?.value;
-      if (slidesData && slidesData.length > 0) {
-        const slidesContainer = document.getElementById('heroSlides');
-        const dotsContainer = document.getElementById('heroPagination');
-        
-        if (slidesContainer && dotsContainer) {
-          slidesContainer.innerHTML = slidesData.map((s, i) => `
-            <div class="hero-slide ${i === 0 ? 'active' : ''}">
-              <div class="hero-bg"></div>
-              <div class="hero-bg-image" style="background-image: url('${s.image || ''}');"></div>
-              <div class="hero-gradient"></div>
-              <div class="hero-pattern"></div>
-              <div class="hero-grid-lines"></div>
-              <div class="container slide-content-wrap">
-                <div class="hero-content">
-                  <div class="hero-left">
-                    <div class="hero-tag"><span class="dot"></span>${s.tagline || ''}</div>
-                    <h1 class="hero-title">${s.title || ''}</h1>
-                  </div>
-                  ${i === 0 ? `
-                  <div class="hero-right">
-                    <div class="hero-badge-wrap">
-                      <div class="hero-badge-ring"></div>
-                      <div class="hero-badge-ring-2"></div>
-                      <div class="hero-badge-glow"></div>
-                      <img src="/images/logo.png" alt="NewHope Naija FC" class="hero-logo-img" />
-                    </div>
-                  </div>` : ''}
-                </div>
-              </div>
-            </div>
-          `).join('');
+  // ── Load Hero Slider from Admin Settings ──────────────────────
+  const renderSlides = (slidesData) => {
+    const slidesContainer = document.getElementById('heroSlides');
+    const dotsContainer = document.getElementById('heroPagination');
+    if (!slidesContainer || !dotsContainer) return;
 
-          dotsContainer.innerHTML = slidesData.map((_, i) => `<span class="hero-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`).join('');
-          
-          setupSlider(); // Reinitialize
-        }
-      }
-    });
+    slidesContainer.innerHTML = slidesData.map((s, i) => `
+      <div class="hero-slide ${i === 0 ? 'active' : ''}">
+        <div class="hero-bg"></div>
+        <div class="hero-bg-image" style="background-image: url('${s.image || ''}');"></div>
+        <div class="hero-gradient"></div>
+        <div class="hero-pattern"></div>
+        <div class="hero-grid-lines"></div>
+        <div class="container slide-content-wrap">
+          <div class="hero-content">
+            <div class="hero-left">
+              <div class="hero-tag"><span class="dot"></span>${s.tagline || ''}</div>
+              <h1 class="hero-title">${s.title || ''}</h1>
+            </div>
+            ${i === 0 ? `
+            <div class="hero-right">
+              <div class="hero-badge-wrap">
+                <div class="hero-badge-ring"></div>
+                <div class="hero-badge-ring-2"></div>
+                <div class="hero-badge-glow"></div>
+                <img src="/images/logo.png" alt="NewHope Naija FC" class="hero-logo-img" />
+              </div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    dotsContainer.innerHTML = slidesData.map((_, i) =>
+      `<span class="hero-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`
+    ).join('');
+
+    setupSlider();
+  };
+
+  // Default fallback slides (used when admin hasn't configured any)
+  const defaultSlides = [
+    {
+      image: '/images/hero-slide-1.jpg',
+      tagline: t('heroTag1'),
+      title: `NEWHOPE<br><span class="red">NAIJA</span><br><span class="navy">${t('heroTitleNavy')}</span>`
+    },
+    {
+      image: '/images/hero-slide-2.jpg',
+      tagline: t('heroTag2'),
+      title: `${t('heroTitle2A')}<br><span class="red">${t('heroTitle2B')}</span>`
+    },
+    {
+      image: '/images/hero-slide-3.jpg',
+      tagline: t('heroTag3'),
+      title: `${t('heroTitle3A')}<br><span>${t('heroTitle3B')}</span>`
+    }
+  ];
+
+  if (supabase) {
+    supabase.from('site_settings').select('value').eq('key', 'home_slider').single()
+      .then(({ data }) => {
+        const adminSlides = data?.value;
+        // Use admin slides if they exist, otherwise fall back to defaults
+        renderSlides((adminSlides && adminSlides.length > 0) ? adminSlides : defaultSlides);
+      })
+      .catch(() => renderSlides(defaultSlides)); // Network error fallback
+  } else {
+    renderSlides(defaultSlides);
   }
 
   // Ticker duplicate
