@@ -805,12 +805,12 @@ export function render() {
         <form id="sliderForm" class="modal-form">
           <input type="hidden" id="sliderFormIndex" value="-1" />
           <div class="form-group">
-            <label>Tagline (e.g. WELCOME TO) *</label>
-            <input type="text" id="slTagline" class="form-input" required placeholder="Short top label" />
+            <label>Tagline (e.g. WELCOME TO) <span style="color:var(--gray);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+            <input type="text" id="slTagline" class="form-input" placeholder="Short top label — leave blank for image-only slide" />
           </div>
           <div class="form-group">
-            <label>Main Title (HTML allowed) *</label>
-            <input type="text" id="slTitle" class="form-input" required placeholder="e.g. NEWHOPE<br><span class='red'>NAIJA</span>" />
+            <label>Main Title (HTML allowed) <span style="color:var(--gray);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+            <input type="text" id="slTitle" class="form-input" placeholder="e.g. NEWHOPE<br><span class='red'>NAIJA</span> — leave blank for image-only slide" />
           </div>
           <div class="form-group">
             <label>Background Image (Upload OR URL) *</label>

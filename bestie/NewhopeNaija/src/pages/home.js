@@ -207,8 +207,8 @@ export function init() {
         <div class="container slide-content-wrap">
           <div class="hero-content">
             <div class="hero-left">
-              <div class="hero-tag"><span class="dot"></span>${s.tagline || ''}</div>
-              <h1 class="hero-title">${s.title || ''}</h1>
+              ${s.tagline ? `<div class="hero-tag"><span class="dot"></span>${s.tagline}</div>` : ''}
+              ${s.title ? `<h1 class="hero-title">${s.title}</h1>` : ''}
             </div>
             ${i === 0 ? `
             <div class="hero-right">
